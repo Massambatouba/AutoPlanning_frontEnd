@@ -1,0 +1,29 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  padding: var(--space-4);
+  overflow-y: auto;
+  transition: padding-left 0.3s ease;
+}
+
+.content.with-sidenav {
+  padding-left: 250px;
+}
+
+@media (max-width: 768px) {
+  .content.with-sidenav {
+    padding-left: var(--space-4);
+  }
+}

@@ -1,0 +1,14 @@
+/* Conserve le fond légèrement différent */
+.container-fluid {
+  background-color: #f8f9fa;
+}
+
+/* Ajustement badge */
+.badge {
+  font-size: 0.9em;
+}
+
+/* Espace égal pour les boutons Quick Actions */
+.d-flex.gap-2 > * {
+  flex: 1;
+}

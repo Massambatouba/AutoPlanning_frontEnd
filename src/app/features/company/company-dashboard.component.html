@@ -1,0 +1,42 @@
+<!-- company-dashboard.component.html -->
+<div class="container-fluid p-4">
+
+  <!-- ENTÊTE ENTREPRISE -->
+  <div class="card mb-4" *ngIf="company">
+    <div class="card-body d-flex justify-content-between align-items-center">
+
+      <!-- Logo + nom + adresse -->
+      <div class="d-flex align-items-center">
+        <img
+          *ngIf="company.logoUrl"
+          [src]="company.logoUrl"
+          [alt]="company.name ?? 'Logo entreprise'"
+          class="rounded me-3"
+          style="width:80px;height:80px;object-fit:contain;"
+        />
+
+        <div>
+          <h1 class="h4 mb-0">{{ company.name }}</h1>
+          <p *ngIf="company.address" class="mb-0 text-muted">
+            {{ company.address }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Badge abonnement -->
+      <span
+        class="badge"
+        [ngClass]="{
+          'bg-success': company.subscriptionStatus === 'ACTIVE',
+          'bg-warning text-dark': company.subscriptionStatus === 'TRIAL',
+          'bg-danger': company.subscriptionStatus === 'INACTIVE'
+        }"
+      >
+        {{ getSubscriptionStatusLabel(company.subscriptionStatus) }}
+      </span>
+    </div>
+  </div>
+
+  <!-- … le reste de votre page … -->
+
+</div>

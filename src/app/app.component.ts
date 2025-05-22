@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +7,19 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'projet_autoPlanningFrontEnd';
+  isAuthenticated = false;
+  isSidenavOpen = true;
+  companyName = '';
+
+    constructor(private authService: AuthService) {
+    this.authService.isAuthenticated$.subscribe(isAuthenticated => {
+      this.isAuthenticated = isAuthenticated;
+      if (isAuthenticated) {
+        this.companyName = this.authService.getCurrentUserCompany() || 'Auto Planning';
+      }
+    });
+  }
+  toggleSidenav() {
+    this.isSidenavOpen = !this.isSidenavOpen;
+  }
 }

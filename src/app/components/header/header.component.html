@@ -1,0 +1,37 @@
+<nav class="navbar navbar-expand bg-white shadow-sm border-bottom">
+  <div class="container-fluid">
+    <button class="btn btn-link d-lg-none me-3" (click)="onToggleSidenav()">
+      <i-lucide name="menu" class="h-5 w-5"></i-lucide>
+    </button>
+    <a class="navbar-brand text-primary fw-bold" routerLink="/dashboard">
+      {{ companyName }}
+    </a>
+    <div class="d-flex align-items-center ms-auto">
+      <button class="btn btn-light position-relative me-3">
+        <i-lucide name="bell" class="h-5 w-5"></i-lucide>
+        <span *ngIf="notificationCount>0"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          {{ notificationCount }}
+        </span>
+      </button>
+      <div class="dropdown" [class.show]="isUserMenuOpen">
+        <button class="btn btn-light d-flex align-items-center"
+                (click)="toggleUserMenu()"
+                [attr.aria-expanded]="isUserMenuOpen">
+          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+               style="width:32px;height:32px;">
+            {{ userInitials }}
+          </div>
+          <span class="me-1">{{ userName }}</span>
+          <i-lucide name="user" class="h-5 w-5"></i-lucide>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end mt-1" [class.show]="isUserMenuOpen">
+          <li><a class="dropdown-item" routerLink="/profile"><i-lucide name="user" class="me-2 h-4 w-4"></i-lucide>Profil</a></li>
+          <li><a class="dropdown-item" routerLink="/settings"><i-lucide name="settings" class="me-2 h-4 w-4"></i-lucide>Paramètres</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" (click)="logout()"><i-lucide name="log-out" class="me-2 h-4 w-4"></i-lucide>Déconnexion</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
