@@ -1,0 +1,30 @@
+<nav 
+  class="offcanvas offcanvas-start bg-light border-end"
+  [class.show]="isOpen"
+  tabindex="-1"
+  [style.visibility]="isOpen ? 'visible' : 'hidden'"
+>
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Menu</h5>
+  </div>
+  <div class="offcanvas-body p-0">
+    <ul class="nav nav-pills flex-column">
+      <li class="nav-item" *ngFor="let item of navItems">
+        <a 
+          class="nav-link d-flex align-items-center"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [class.active]="isActive(item.route)"
+        >
+          <i-lucide
+            [name]="item.icon.toLowerCase()"
+            class="me-2"
+            [size]="20"
+          ></i-lucide>
+          <span>{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+

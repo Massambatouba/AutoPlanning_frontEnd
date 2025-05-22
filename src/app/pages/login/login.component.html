@@ -1,0 +1,88 @@
+<div class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+  <div class="card shadow-sm w-100" style="max-width: 400px;">
+    <div class="card-body p-4">
+
+      <!-- En-tête -->
+      <div class="text-center mb-4">
+        <div class="mb-3">
+          <i-lucide name="calendar" class="fs-1 text-primary"></i-lucide>
+        </div>
+        <h3 class="card-title fw-bold">AutoPlanning</h3>
+        <p class="text-muted">Connectez-vous pour accéder à votre tableau de bord</p>
+      </div>
+
+      <!-- Formulaire -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+        <!-- Erreur générale -->
+        <div *ngIf="error" class="alert alert-danger d-flex align-items-center" role="alert">
+          <i-lucide name="shield" class="me-2"></i-lucide>
+          <div>{{ error }}</div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-floating mb-3">
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="form-control"
+            [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+            placeholder=" "
+          />
+          <label for="email">Adresse email</label>
+          <div class="invalid-feedback">
+            Veuillez entrer votre email.
+          </div>
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="form-floating mb-4">
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            class="form-control"
+            [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            placeholder=" "
+          />
+          <label for="password">Mot de passe</label>
+          <div class="invalid-feedback">
+            Veuillez entrer votre mot de passe.
+          </div>
+        </div>
+
+        <!-- Bouton -->
+        <div class="d-grid mb-3">
+          <button
+            type="submit"
+            class="btn btn-primary btn-lg"
+            [disabled]="loading || loginForm.invalid"
+          >
+            <ng-container *ngIf="loading; else noLoad">
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Connexion…
+            </ng-container>
+            <ng-template #noLoad>Se connecter</ng-template>
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="d-flex align-items-center my-3">
+        <hr class="flex-grow-1">
+        <span class="px-2 text-muted">Pas encore inscrit ?</span>
+        <hr class="flex-grow-1">
+      </div>
+
+      <!-- Lien inscription -->
+      <div class="text-center">
+        <a routerLink="/register" class="btn btn-outline-primary">
+          Créer un compte entreprise
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
