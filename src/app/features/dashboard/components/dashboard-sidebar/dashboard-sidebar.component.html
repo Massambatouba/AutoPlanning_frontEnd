@@ -1,0 +1,43 @@
+<aside class="dashboard-sidebar">
+  <div class="notification-card">
+    <h3>Notifications</h3>
+    
+    <div *ngIf="notifications.length === 0" class="empty-state">
+      <p>Aucune nouvelle notification</p>
+    </div>
+    
+    <ul class="notifications-list">
+      <li *ngFor="let notification of notifications" class="notification-item">
+        <div class="notification-icon">
+          <i class="material-icons">{{ notification.icon }}</i>
+        </div>
+        <div class="notification-content">
+          <p>{{ notification.message }}</p>
+          <span class="notification-time">{{ notification.time }}</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="quick-actions-card">
+    <h3>Actions Rapides</h3>
+    <div class="quick-actions">
+      <a routerLink="/schedules/create" class="quick-action-btn">
+        <i class="material-icons">event</i>
+        Créer Planning
+      </a>
+      <a routerLink="/employees/create" class="quick-action-btn">
+        <i class="material-icons">person_add</i>
+        Ajouter Employé
+      </a>
+      <a routerLink="/sites/create" class="quick-action-btn">
+        <i class="material-icons">add_business</i>
+        Ajouter Site
+      </a>
+      <a routerLink="/reports" class="quick-action-btn">
+        <i class="material-icons">assessment</i>
+        Voir Rapports
+      </a>
+    </div>
+  </div>
+</aside>

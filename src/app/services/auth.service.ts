@@ -126,18 +126,13 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  getCurrentUserCompany(): string | null {
-    const companyJson = localStorage.getItem(this.COMPANY_KEY);
-    if (companyJson) {
-      try {
-        const company = JSON.parse(companyJson);
-        return company.name;
-      } catch (error) {
-        return null;
-      }
-    }
-    return null;
-  }
+// auth.service.ts
+getCurrentUserCompany(): Company | null {
+  const json = localStorage.getItem(this.COMPANY_KEY);
+  try   { return json ? JSON.parse(json) as Company : null; }
+  catch { return null; }
+}
+
 
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();

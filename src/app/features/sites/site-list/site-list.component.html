@@ -1,0 +1,105 @@
+<div class="site-list-container">
+  <header class="page-header">
+    <h1>Sites</h1>
+    <div class="header-actions">
+      <button class="btn btn-outline">
+        <i class="material-icons">filter_list</i>
+        Filtrer
+      </button>
+      <button class="btn btn-primary" routerLink="/sites/create">
+        <i class="material-icons">add_business</i>
+        Ajouter un Site
+      </button>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <div class="search-box">
+      <i class="material-icons">search</i>
+      <input
+        type="text"
+        placeholder="Rechercher un site..."
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Statut:</label>
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+        <option value="all">Tous</option>
+        <option value="active">Actifs</option>
+        <option value="inactive">Inactifs</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && filteredSites.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <i class="material-icons">business</i>
+    </div>
+    <h3>Aucun site trouvé</h3>
+    <p>Ajoutez votre premier site ou ajustez vos filtres.</p>
+    <button class="btn btn-primary" routerLink="/sites/create">
+      Ajouter un Site
+    </button>
+  </div>
+
+  <div *ngIf="!loading && filteredSites.length > 0" class="site-grid">
+    <div *ngFor="let site of filteredSites" class="site-card">
+      <div class="site-header">
+        <h3>{{ site?.name }}</h3>
+        <span class="badge" [class.badge-success]="site.active" [class.badge-warning]="!site.active">
+          {{ site.active ? 'Actif' : 'Inactif' }}
+        </span>
+      </div>
+
+      <div class="site-details">
+        <div class="detail-item">
+          <i class="material-icons">location_on</i>
+          <span>{{ site.address }}, {{ site.city }}</span>
+        </div>
+        <div class="detail-item" *ngIf="site.phone">
+          <i class="material-icons">phone</i>
+          <span>{{ site.phone }}</span>
+        </div>
+        <div class="detail-item" *ngIf="site.email">
+          <i class="material-icons">email</i>
+          <span>{{ site.email }}</span>
+        </div>
+        <div class="detail-item" *ngIf="site.managerName">
+          <i class="material-icons">person</i>
+          <span>{{ site.managerName }}</span>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <a [routerLink]="['/sites', site.id]" class="btn btn-outline">
+          <i class="material-icons">visibility</i>
+          Voir
+        </a>
+        <a [routerLink]="['/sites', site.id, 'edit']" class="btn btn-outline">
+          <i class="material-icons">edit</i>
+          Modifier
+        </a>
+        <button
+          class="btn btn-icon"
+          (click)="toggleSiteStatus(site)"
+          [title]="site.active ? 'Désactiver' : 'Activer'"
+        >
+          <i class="material-icons">
+            {{ site.active ? 'toggle_off' : 'toggle_on' }}
+          </i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

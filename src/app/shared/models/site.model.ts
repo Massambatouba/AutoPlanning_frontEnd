@@ -11,7 +11,7 @@ export interface Site {
   managerName?: string;
   managerEmail?: string;
   managerPhone?: string;
-  isActive: boolean;
+  active: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

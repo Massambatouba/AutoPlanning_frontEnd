@@ -1,0 +1,268 @@
+<div class="container my-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h2 class="mb-0">Ajouter un Employé</h2>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()">
+
+        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+        <div class="row gx-4 gy-3">
+          <!-- Prénom -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="text" id="firstName" formControlName="firstName"
+                     class="form-control" placeholder="Prénom">
+              <label for="firstName">Prénom *</label>
+              <div class="invalid-feedback" *ngIf="employeeForm.get('firstName')?.invalid && employeeForm.get('firstName')?.touched">
+                Requis.
+              </div>
+            </div>
+          </div>
+
+          <!-- Nom -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="text" id="lastName" formControlName="lastName"
+                     class="form-control" placeholder="Nom">
+              <label for="lastName">Nom *</label>
+              <div class="invalid-feedback" *ngIf="employeeForm.get('lastName')?.invalid && employeeForm.get('lastName')?.touched">
+                Requis.
+              </div>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="email" id="email" formControlName="email"
+                     class="form-control" placeholder="Email">
+              <label for="email">Email *</label>
+              <div class="invalid-feedback" *ngIf="employeeForm.get('email')?.invalid && employeeForm.get('email')?.touched">
+                <span *ngIf="employeeForm.get('email')?.errors?.['required']">Requis.</span>
+                <span *ngIf="employeeForm.get('email')?.errors?.['email']">Invalide.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Téléphone -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="tel" id="phone" formControlName="phone"
+                     class="form-control" placeholder="Téléphone">
+              <label for="phone">Téléphone</label>
+            </div>
+          </div>
+
+          <!-- Poste -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="text" id="position" formControlName="position"
+                     class="form-control" placeholder="Poste">
+              <label for="position">Poste *</label>
+              <div class="invalid-feedback" *ngIf="employeeForm.get('position')?.invalid && employeeForm.get('position')?.touched">
+                Requis.
+              </div>
+            </div>
+          </div>
+
+          <!-- Département -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <select id="department" formControlName="department"
+                      class="form-select" aria-label="Département">
+                <option value="">-- Aucun --</option>
+                <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+              </select>
+              <label for="department">Département</label>
+            </div>
+          </div>
+
+          <!-- Code Employé -->
+          <div class="col-md-4">
+            <div class="form-floating">
+              <input type="text" id="employeeCode" formControlName="employeeCode"
+                     class="form-control" placeholder="Code Employé">
+              <label for="employeeCode">Code Employé *</label>
+              <div class="invalid-feedback" *ngIf="employeeForm.get('employeeCode')?.invalid && employeeForm.get('employeeCode')?.touched">
+                Requis.
+              </div>
+            </div>
+          </div>
+
+          <!-- Type de Contrat -->
+          <div class="col-md-4">
+            <div class="form-floating">
+              <select id="contractType" formControlName="contractType"
+                      class="form-select" aria-label="Type de Contrat">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let ct of contractTypes" [value]="ct.value">{{ ct.label }}</option>
+              </select>
+              <label for="contractType">Type de Contrat *</label>
+            </div>
+          </div>
+
+          <!-- Heures max / sem. -->
+          <div class="col-md-4">
+            <div class="form-floating">
+              <input type="number" id="maxHoursPerWeek" formControlName="maxHoursPerWeek"
+                     class="form-control" placeholder="Heures max / sem.">
+              <label for="maxHoursPerWeek">Heures max / sem. *</label>
+            </div>
+          </div>
+
+          <!-- Site principal -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <select id="siteId" formControlName="siteId"
+                      class="form-select" aria-label="Site principal">
+                <option value="">-- Choisir un site --</option>
+                <option *ngFor="let s of sites" [value]="s.id">{{ s.name }}</option>
+              </select>
+              <label for="siteId">Site *</label>
+              <div class="invalid-feedback" *ngIf="employeeForm.get('siteId')?.invalid && employeeForm.get('siteId')?.touched">
+                Requis.
+              </div>
+            </div>
+          </div>
+
+          <!-- Sites préférés (multi-select) -->
+          <div class="col-md-6">
+            <label class="form-label">Sites préférés</label>
+            <div class="input-group mb-2">
+              <select class="form-select" (change)="onPreferredSiteSelect($event)">
+                <option value="" disabled selected>Ajouter un site…</option>
+                <option *ngFor="let s of sites" [value]="s.id">{{ s.name }}</option>
+              </select>
+              <button class="btn btn-outline-secondary" type="button"
+                      (click)="clearPreferredSites()"
+                      [disabled]="preferredSites.length===0"
+                      title="Tout supprimer">
+                <i class="bi bi-x-circle"></i>
+              </button>
+            </div>
+            <div *ngIf="preferredSites.length===0" class="form-text text-muted">
+              Aucun site préféré sélectionné.
+            </div>
+            <div *ngIf="preferredSites.length>0" class="d-flex flex-wrap gap-2">
+              <span *ngFor="let id of preferredSites"
+                    class="badge bg-secondary d-inline-flex align-items-center">
+                {{ getSiteName(id) }}
+                <button type="button"
+                        class="btn-close btn-close-white btn-sm ms-2"
+                        aria-label="Retirer"
+                        (click)="removePreferredSite(id)"></button>
+              </span>
+            </div>
+          </div>
+
+          <!-- Compétences -->
+          <div class="col-12">
+            <div class="form-floating">
+              <input formControlName="skillSets" type="text"
+                     class="form-control" id="skillSets" placeholder="Compétences">
+              <label for="skillSets">Compétences (virgule séparées)</label>
+            </div>
+          </div>
+
+          <!-- AgentTypes -->
+          <div class="col-12">
+            <label class="form-label">Agent Types *</label>
+            <div class="d-flex flex-wrap gap-3">
+              <div *ngFor="let t of agentTypes" class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox"
+                       [id]="'agent_'+t"
+                       [checked]="employeeForm.value.agentTypes.includes(t)"
+                       (change)="onAgentTypeToggle(t,$event)">
+                <label class="form-check-label" [for]="'agent_'+t">{{ t }}</label>
+              </div>
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="employeeForm.get('agentTypes')?.invalid && employeeForm.get('agentTypes')?.touched">
+              Au moins un type doit être sélectionné.
+            </div>
+          </div>
+
+          <!-- Préférences (switch) -->
+          <div class="col-12">
+            <label class="form-label">Préférences</label>
+            <div class="row gx-3 gy-2 align-items-center">
+              <div class="col-auto" *ngFor="let pref of [
+                  {key:'canWorkWeeks',       label:'Semaines'},
+                  {key:'canWorkWeekends',    label:'Week-ends'},
+                  {key:'canWorkNights',      label:'Nuits'},
+                  {key:'prefersDay',         label:'Jour'},
+                  {key:'prefersNight',       label:'Nuit'},
+                  {key:'noPreference',       label:'Sans préférence'}
+                ]">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox"
+                         [id]="pref.key" [formControlName]="pref.key">
+                  <label class="form-check-label" [for]="pref.key">{{ pref.label }}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contraintes horaires -->
+          <div class="col-md-3">
+            <div class="form-floating">
+              <input formControlName="minHoursPerDay" type="number"
+                     class="form-control" id="minHoursPerDay" placeholder="Min H/J">
+              <label for="minHoursPerDay">Min H/J *</label>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <input formControlName="maxHoursPerDay" type="number"
+                     class="form-control" id="maxHoursPerDay" placeholder="Max H/J">
+              <label for="maxHoursPerDay">Max H/J *</label>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <input formControlName="minHoursPerWeek" type="number"
+                     class="form-control" id="minHoursPerWeek" placeholder="Min H/S">
+              <label for="minHoursPerWeek">Min H/S *</label>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <input formControlName="maxHoursPerWeekPreference" type="number"
+                     class="form-control" id="maxHoursPerWeekPreference" placeholder="Max H/S">
+              <label for="maxHoursPerWeekPreference">Max H/S *</label>
+            </div>
+          </div>
+
+          <!-- Jours consécutifs -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input formControlName="preferredConsecutiveDays" type="number"
+                     class="form-control" id="preferredConsecutiveDays" placeholder="Jours">
+              <label for="preferredConsecutiveDays">Jours consécutifs idéaux</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input formControlName="minConsecutiveDaysOff" type="number"
+                     class="form-control" id="minConsecutiveDaysOff" placeholder="Jours">
+              <label for="minConsecutiveDaysOff">Min jours repos *</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons -->
+        <div class="mt-4 text-end">
+          <button type="button" class="btn btn-outline-secondary me-2" routerLink="/employees">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="employeeForm.invalid || saving">
+            <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+            {{ saving ? 'Création…' : 'Créer l’Employé' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
