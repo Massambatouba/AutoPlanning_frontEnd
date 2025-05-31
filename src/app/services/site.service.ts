@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { Site } from '../shared/models/site.model';
 import { environment } from 'src/environments/environment';
 
@@ -8,11 +8,17 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class SiteService {
+  private base = `${environment.apiUrl}/sites`;
 constructor(private http: HttpClient) {}
 
-  getSites(): Observable<Site[]> {
-    return this.http.get<Site[]>(`${environment.apiUrl}/sites`);
-  }
+getSites(): Observable<Site[]> {
+  return this.http.get<Site[]>(this.base).pipe(
+    map(list => list.map(s => ({
+      ...s,
+      active: (s as any).active ?? (s as any).isActive ?? false
+    })))
+  );
+}
 
   getSiteById(id: number): Observable<Site> {
     return this.http.get<Site>(`${environment.apiUrl}/sites/${id}`);
@@ -37,4 +43,8 @@ constructor(private http: HttpClient) {}
   deactivateSite(id: number): Observable<Site> {
     return this.http.put<Site>(`${environment.apiUrl}/sites/${id}/deactivate`, {});
   }
+
+  toggleSiteStatus(id: number): Observable<Site> {
+  return this.http.put<Site>(`${environment.apiUrl}/sites/${id}/toggle-status`, {});
+}
 }

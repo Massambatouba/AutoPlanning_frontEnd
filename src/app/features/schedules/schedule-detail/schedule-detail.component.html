@@ -1,0 +1,133 @@
+<div class="schedule-detail-container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="btn btn-outline" routerLink="/schedules">
+        <i class="material-icons">arrow_back</i>
+        Retour
+      </button>
+      <h1 *ngIf="schedule">{{ schedule.name }}</h1>
+    </div>
+
+    <div class="header-actions" *ngIf="schedule">
+      <button
+        *ngIf="!schedule.isPublished"
+        class="btn btn-outline"
+        (click)="publishSchedule()"
+      >
+        <i class="material-icons">publish</i>
+        Publier
+      </button>
+
+      <button
+        *ngIf="schedule.isPublished && !schedule.isSent"
+        class="btn btn-outline"
+        (click)="sendSchedule()"
+      >
+        <i class="material-icons">send</i>
+        Envoyer
+      </button>
+
+      <button
+        class="btn btn-primary"
+        [routerLink]="['/schedules', schedule.id, 'edit']"
+      >
+        <i class="material-icons">edit</i>
+        Modifier
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && schedule" class="schedule-content">
+    <div class="schedule-info card">
+      <div class="info-row">
+        <div class="info-item">
+          <label>Période</label>
+          <p>{{ schedule?.month }}/{{ schedule.year }}</p>
+        </div>
+
+        <div class="info-item">
+          <label>Statut</label>
+          <span class="badge"
+            [class.badge-success]="schedule.isPublished"
+            [class.badge-warning]="!schedule.isPublished">
+            {{ schedule.isPublished ? 'Publié' : 'Brouillon' }}
+          </span>
+        </div>
+
+        <div class="info-item">
+          <label>Envoyé</label>
+          <span class="badge"
+            [class.badge-success]="schedule.isSent"
+            [class.badge-warning]="!schedule.isSent">
+            {{ schedule.isSent ? 'Oui' : 'Non' }}
+          </span>
+        </div>
+
+        <div class="info-item">
+          <label>Complétion</label>
+          <div class="completion-info">
+            <div class="progress-bar">
+              <div
+                class="progress"
+                [style.width.%]="schedule.completionRate"
+                [class.high]="schedule.completionRate > 80"
+                [class.medium]="schedule.completionRate > 50 && schedule.completionRate <= 80"
+                [class.low]="schedule.completionRate <= 50">
+              </div>
+            </div>
+            <span>{{ schedule.completionRate }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="assignments-section card">
+      <h2>Affectations</h2>
+
+      <div *ngIf="assignments.length === 0" class="empty-state">
+        <p>Aucune affectation pour ce planning</p>
+        <button class="btn btn-outline">
+          Ajouter une affectation
+        </button>
+      </div>
+
+      <div *ngIf="assignments.length > 0" class="assignments-list">
+        <div *ngFor="let assignment of assignments" class="assignment-card">
+          <div class="assignment-header">
+            <h3>{{ assignment.employeeId }}</h3>
+            <span class="badge" [ngClass]="{
+              'badge-success': assignment.status === 'CONFIRMED',
+              'badge-warning': assignment.status === 'PENDING',
+              'badge-error': assignment.status === 'DECLINED'
+            }">
+              {{ assignment.status }}
+            </span>
+          </div>
+
+          <div class="assignment-details">
+            <p>
+              <i class="material-icons">event</i>
+              {{ assignment.date | date:'dd/MM/yyyy' }}
+            </p>
+            <p>
+              <i class="material-icons">schedule</i>
+              {{ assignment.startTime }} - {{ assignment.endTime }}
+            </p>
+            <p *ngIf="assignment.notes">
+              <i class="material-icons">note</i>
+              {{ assignment.notes }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

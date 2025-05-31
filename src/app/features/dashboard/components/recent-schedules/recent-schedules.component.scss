@@ -1,0 +1,70 @@
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.view-all {
+  font-size: 0.875rem;
+}
+
+.schedules-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.schedule-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: var(--space-4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.schedule-info {
+  h3 {
+    margin-bottom: var(--space-1);
+  }
+  
+  p {
+    color: var(--neutral-600);
+    margin-bottom: var(--space-2);
+  }
+}
+
+.schedule-meta {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.completion-rate {
+  font-size: 0.875rem;
+  color: var(--neutral-600);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-6);
+  color: var(--neutral-500);
+  
+  p {
+    margin-bottom: var(--space-4);
+  }
+}

@@ -1,0 +1,171 @@
+<div class="template-create-container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="btn btn-outline" routerLink="../">
+        <i class="material-icons">arrow_back</i>
+        Retour
+      </button>
+      <h1>Créer un Modèle de Vacation</h1>
+    </div>
+  </header>
+
+  <div class="card">
+    <div *ngIf="error" class="alert alert-error">
+      {{ error }}
+    </div>
+
+    <form [formGroup]="templateForm" (ngSubmit)="onSubmit()" class="template-form">
+      <div class="form-group">
+        <label for="name" class="form-label">Nom du Modèle</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          class="form-control"
+          [class.is-invalid]="templateForm.get('name')?.invalid && templateForm.get('name')?.touched"
+        />
+        <div class="error-message" *ngIf="templateForm.get('name')?.invalid && templateForm.get('name')?.touched">
+          Le nom est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dayOfWeek" class="form-label">Jour de la Semaine</label>
+        <select
+          id="dayOfWeek"
+          formControlName="dayOfWeek"
+          class="form-control"
+          [class.is-invalid]="templateForm.get('dayOfWeek')?.invalid && templateForm.get('dayOfWeek')?.touched"
+        >
+          <option value="">Sélectionnez un jour</option>
+          <option *ngFor="let day of daysOfWeek" [value]="day.value">
+            {{ day.label }}
+          </option>
+        </select>
+        <div class="error-message" *ngIf="templateForm.get('dayOfWeek')?.invalid && templateForm.get('dayOfWeek')?.touched">
+          Le jour est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description" class="form-label">Description</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          class="form-control"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="form-section">
+        <div class="section-header">
+          <h2>Agents Requis</h2>
+          <button type="button" class="btn btn-outline" (click)="addAgent()">
+            <i class="material-icons">add</i>
+            Ajouter un Agent
+          </button>
+        </div>
+
+        <div formArrayName="agents" class="agents-list">
+          <div *ngFor="let agent of agents.controls; let i = index" [formGroupName]="i" class="agent-form">
+            <div class="agent-header">
+              <h3>Agent #{{ i + 1 }}</h3>
+              <button type="button" class="btn btn-icon" (click)="removeAgent(i)">
+                <i class="material-icons">delete</i>
+              </button>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label [for]="'agentType' + i" class="form-label">Type d'Agent</label>
+                <select
+                  [id]="'agentType' + i"
+                  formControlName="agentType"
+                  class="form-control"
+                  [class.is-invalid]="agent.get('agentType')?.invalid && agent.get('agentType')?.touched"
+                >
+                  <option value="">Sélectionnez un type</option>
+                  <option *ngFor="let type of agentTypes" [value]="type.value">
+                    {{ type.label }}
+                  </option>
+                </select>
+                <div class="error-message" *ngIf="agent.get('agentType')?.invalid && agent.get('agentType')?.touched">
+                  Le type d'agent est requis
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label [for]="'requiredCount' + i" class="form-label">Nombre Requis</label>
+                <input
+                  type="number"
+                  [id]="'requiredCount' + i"
+                  formControlName="requiredCount"
+                  class="form-control"
+                  min="1"
+                  [class.is-invalid]="agent.get('requiredCount')?.invalid && agent.get('requiredCount')?.touched"
+                />
+                <div class="error-message" *ngIf="agent.get('requiredCount')?.invalid && agent.get('requiredCount')?.touched">
+                  Le nombre doit être supérieur à 0
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label [for]="'startTime' + i" class="form-label">Heure de Début</label>
+                <input
+                  type="time"
+                  [id]="'startTime' + i"
+                  formControlName="startTime"
+                  class="form-control"
+                  [class.is-invalid]="agent.get('startTime')?.invalid && agent.get('startTime')?.touched"
+                />
+                <div class="error-message" *ngIf="agent.get('startTime')?.invalid && agent.get('startTime')?.touched">
+                  L'heure de début est requise
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label [for]="'endTime' + i" class="form-label">Heure de Fin</label>
+                <input
+                  type="time"
+                  [id]="'endTime' + i"
+                  formControlName="endTime"
+                  class="form-control"
+                  [class.is-invalid]="agent.get('endTime')?.invalid && agent.get('endTime')?.touched"
+                />
+                <div class="error-message" *ngIf="agent.get('endTime')?.invalid && agent.get('endTime')?.touched">
+                  L'heure de fin est requise
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label [for]="'notes' + i" class="form-label">Notes</label>
+              <textarea
+                [id]="'notes' + i"
+                formControlName="notes"
+                class="form-control"
+                rows="2"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" routerLink="../">
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="templateForm.invalid || saving"
+        >
+          <span *ngIf="saving" class="spinner-sm"></span>
+          <span *ngIf="!saving">Créer le Modèle</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

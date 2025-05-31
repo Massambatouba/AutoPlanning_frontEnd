@@ -1,0 +1,102 @@
+<div class="site-detail-container">
+  <header class="page-header" *ngIf="site">
+    <div class="header-left">
+      <button class="btn btn-outline" routerLink="/sites">
+        <i class="material-icons">arrow_back</i>
+        Retour
+      </button>
+      <h1 *ngIf="site">{{ site.name }}</h1>
+    </div>
+
+    <div class="header-actions" *ngIf="site">
+      <button
+        class="btn btn-outline"
+        (click)="toggleSiteStatus()"
+      >
+        <i class="material-icons">{{ site.active ? 'toggle_off' : 'toggle_on' }}</i>
+        {{ site.active ? 'Désactiver' : 'Activer' }}
+      </button>
+
+      <button
+        class="btn btn-primary"
+        [routerLink]="['/sites', site.id, 'edit']"
+      >
+        <i class="material-icons">edit</i>
+        Modifier
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && site" class="site-content">
+    <div class="site-info card">
+      <div class="site-header">
+        <div class="site-status">
+          <span class="badge" [class.badge-success]="site.active" [class.badge-warning]="!site.active">
+            {{ site.active ? 'Actif' : 'Inactif' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h2>Informations du Site</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Adresse</label>
+            <p>{{ site.address }}</p>
+          </div>
+          <div class="info-item">
+            <label>Ville</label>
+            <p>{{ site.city }}</p>
+          </div>
+          <div class="info-item">
+            <label>Code Postal</label>
+            <p>{{ site.zipCode }}</p>
+          </div>
+          <div class="info-item">
+            <label>Pays</label>
+            <p>{{ site.country }}</p>
+          </div>
+          <div class="info-item">
+            <label>Téléphone</label>
+            <p>{{ site.phone || 'Non renseigné' }}</p>
+          </div>
+          <div class="info-item">
+            <label>Email</label>
+            <p>{{ site.email || 'Non renseigné' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h2>Responsable du Site</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Nom</label>
+            <p>{{ site.managerName || 'Non renseigné' }}</p>
+          </div>
+          <div class="info-item">
+            <label>Email</label>
+            <p>{{ site.managerEmail || 'Non renseigné' }}</p>
+          </div>
+          <div class="info-item">
+            <label>Téléphone</label>
+            <p>{{ site.managerPhone || 'Non renseigné' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="schedules-section card">
+      <h2>Plannings</h2>
+      <!-- Implement schedules list here -->
+    </div>
+  </div>
+</div>

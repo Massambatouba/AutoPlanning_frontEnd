@@ -6,6 +6,7 @@
 >
   <div class="offcanvas-header">
     <h5 class="offcanvas-title">Menu</h5>
+    <button type="button" class="btn-close" (click)="toggle()" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body p-0">
     <ul class="nav nav-pills flex-column">
@@ -17,7 +18,7 @@
           [class.active]="isActive(item.route)"
         >
           <i-lucide
-            [name]="item.icon.toLowerCase()"
+            [name]="item.icon"
             class="me-2"
             [size]="20"
           ></i-lucide>

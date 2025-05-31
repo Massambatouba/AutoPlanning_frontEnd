@@ -1,0 +1,93 @@
+<div class="templates-container">
+  <!-- ===== Header ===== -->
+  <header class="page-header">
+    <h1>Modèles de Vacation</h1>
+
+    <!-- lien au lieu d’un button -->
+    <a class="btn btn-primary" routerLink="create">
+      <i class="material-icons">add</i>
+      Créer un Modèle
+    </a>
+  </header>
+
+  <!-- ===== Loading / Error ===== -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <!-- ===== Empty state ===== -->
+  <div *ngIf="!loading && templates.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <i class="material-icons">event_note</i>
+    </div>
+    <h3>Aucun modèle trouvé</h3>
+    <p>Créez votre premier modèle de vacation pour ce site.</p>
+
+    <!-- lien au lieu d’un button -->
+    <a class="btn btn-primary" routerLink="create">
+      Créer un Modèle
+    </a>
+  </div>
+
+  <!-- ===== Templates grid ===== -->
+  <div *ngIf="!loading && templates.length > 0" class="templates-grid">
+    <div *ngFor="let template of templates" class="template-card">
+      <!-- header -->
+      <div class="template-header">
+        <h3>{{ template.name }}</h3>
+        <span
+          class="badge"
+          [class.badge-success]="template.isActive"
+          [class.badge-warning]="!template.isActive">
+          {{ template.isActive ? 'Actif' : 'Inactif' }}
+        </span>
+      </div>
+
+      <!-- details -->
+      <div class="template-details">
+        <div class="detail-item">
+          <i class="material-icons">event</i>
+          <span>{{ getDayOfWeekLabel(template.dayOfWeek) }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="template.description">
+          <i class="material-icons">description</i>
+          <span>{{ template.description }}</span>
+        </div>
+
+        <div class="agents-list">
+          <div *ngFor="let agent of template.agents" class="agent-item">
+            <span class="agent-type">{{ getAgentTypeLabel(agent.agentType) }}</span>
+            <span class="agent-time">{{ agent.startTime }} - {{ agent.endTime }}</span>
+            <span class="agent-count">x{{ agent.requiredCount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- actions -->
+      <div class="card-actions">
+        <!-- liens stylés -->
+        <a class="btn btn-outline" [routerLink]="[template.id]">
+          <i class="material-icons">visibility</i>
+          Voir
+        </a>
+
+        <a class="btn btn-outline" [routerLink]="[template.id, 'edit']">
+          <i class="material-icons">edit</i>
+          Modifier
+        </a>
+
+        <!-- vrai button (pas de routerLink) -->
+        <a class="btn btn-icon" (click)="toggleTemplateStatus(template)">
+          <i class="material-icons">
+            {{ template.isActive ? 'toggle_off' : 'toggle_on' }}
+          </i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

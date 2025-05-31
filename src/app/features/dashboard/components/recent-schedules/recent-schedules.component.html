@@ -1,0 +1,41 @@
+<section class="upcoming-schedules">
+  <div class="section-header">
+    <h2>Plannings Récents</h2>
+    <a routerLink="/schedules" class="view-all">Voir Tout</a>
+  </div>
+  
+  <div class="schedules-list">
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+    </div>
+    
+    <div *ngIf="!loading && schedules.length === 0" class="empty-state">
+      <p>Aucun planning trouvé. Créez votre premier planning.</p>
+      <button class="btn btn-outline" routerLink="/schedules/create">
+        Créer un Planning
+      </button>
+    </div>
+    
+    <div *ngFor="let schedule of schedules" class="schedule-card">
+      <div class="schedule-info">
+        <h3>{{ schedule.name }}</h3>
+        <p>{{ schedule.month }}/{{ schedule.year }}</p>
+        <div class="schedule-meta">
+          <span class="badge" 
+            [class.badge-success]="schedule.isPublished"
+            [class.badge-warning]="!schedule.isPublished">
+            {{ schedule.isPublished ? 'Publié' : 'Brouillon' }}
+          </span>
+          <span class="completion-rate">
+            {{ schedule.completionRate }}% Complété
+          </span>
+        </div>
+      </div>
+      <div class="schedule-actions">
+        <button class="btn btn-outline" routerLink="/schedules/{{ schedule.id }}">
+          Voir
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

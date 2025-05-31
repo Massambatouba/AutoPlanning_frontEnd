@@ -1,0 +1,106 @@
+<div class="schedule-edit-container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="btn btn-outline" [routerLink]="['/schedules', schedule?.id]">
+        <i class="material-icons">arrow_back</i>
+        Retour
+      </button>
+      <h1 *ngIf="schedule">Modifier {{ schedule.name }}</h1>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && schedule" class="card">
+    <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()" class="schedule-form">
+      <div class="form-group">
+        <label for="name" class="form-label">Nom du Planning</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          class="form-control"
+          placeholder="Entrez le nom du planning"
+          [class.is-invalid]="scheduleForm.get('name')?.invalid && scheduleForm.get('name')?.touched"
+        />
+        <div class="error-message" *ngIf="scheduleForm.get('name')?.invalid && scheduleForm.get('name')?.touched">
+          Le nom du planning est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="site" class="form-label">Site</label>
+        <select
+          id="site"
+          formControlName="siteId"
+          class="form-control"
+          [class.is-invalid]="scheduleForm.get('siteId')?.invalid && scheduleForm.get('siteId')?.touched"
+        >
+          <option value="">Sélectionnez un site</option>
+          <option *ngFor="let site of sites" [value]="site.id">{{ site.name }}</option>
+        </select>
+        <div class="error-message" *ngIf="scheduleForm.get('siteId')?.invalid && scheduleForm.get('siteId')?.touched">
+          Veuillez sélectionner un site
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="month" class="form-label">Mois</label>
+          <select
+            id="month"
+            formControlName="month"
+            class="form-control"
+            [class.is-invalid]="scheduleForm.get('month')?.invalid && scheduleForm.get('month')?.touched"
+          >
+            <option value="">Sélectionnez un mois</option>
+            <option *ngFor="let month of getMonths()" [value]="month.value">{{ month.label }}</option>
+          </select>
+          <div class="error-message" *ngIf="scheduleForm.get('month')?.invalid && scheduleForm.get('month')?.touched">
+            Veuillez sélectionner un mois
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="year" class="form-label">Année</label>
+          <select
+            id="year"
+            formControlName="year"
+            class="form-control"
+            [class.is-invalid]="scheduleForm.get('year')?.invalid && scheduleForm.get('year')?.touched"
+          >
+            <option value="">Sélectionnez une année</option>
+            <option *ngFor="let year of getYears()" [value]="year">{{ year }}</option>
+          </select>
+          <div class="error-message" *ngIf="scheduleForm.get('year')?.invalid && scheduleForm.get('year')?.touched">
+            Veuillez sélectionner une année
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn btn-outline" 
+          [routerLink]="['/schedules', schedule.id]"
+        >
+          Annuler
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary"
+          [disabled]="scheduleForm.invalid || saving"
+        >
+          <span *ngIf="saving" class="spinner-sm"></span>
+          <span *ngIf="!saving">Enregistrer les Modifications</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

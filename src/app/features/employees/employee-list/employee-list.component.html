@@ -1,0 +1,113 @@
+<div class="employee-list-container">
+  <header class="page-header">
+    <h1>Employés</h1>
+    <div class="header-actions">
+      <button class="btn btn-outline">
+        <i class="material-icons">filter_list</i>
+        Filtrer
+      </button>
+      <button class="btn btn-primary" routerLink="/employees/create">
+        <i class="material-icons">person_add</i>
+        Ajouter un Employé
+      </button>
+    </div>
+  </header>
+
+<!-- barre de filtres -->
+  <div class="filter-bar">
+    <input
+      type="text"
+      placeholder="Rechercher..."
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="applyFilters()"
+      class="form-control search-input"
+    />
+
+    <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()" class="form-control">
+      <option value="all">Tous statuts</option>
+      <option value="active">Actifs</option>
+      <option value="inactive">Inactifs</option>
+    </select>
+
+    <select [(ngModel)]="departmentFilter" (ngModelChange)="applyFilters()" class="form-control">
+      <option value="all">Tous départements</option>
+      <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+    </select>
+
+    <select [(ngModel)]="contractTypeFilter" (ngModelChange)="applyFilters()" class="form-control">
+      <option value="all">Tous contrats</option>
+      <option *ngFor="let ct of contractTypes" [value]="ct.value">{{ ct.label }}</option>
+    </select>
+  </div>
+
+  <!-- état chargement / erreur -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+  </div>
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <!-- liste vide -->
+  <div *ngIf="!loading && filteredEmployees.length === 0" class="empty-state">
+    <p>Aucun employé trouvé.</p>
+  </div>
+
+  <!-- grille paginée -->
+  <div *ngIf="!loading && filteredEmployees.length > 0" class="employee-grid">
+    <div *ngFor="let emp of pagedEmployees()" class="employee-card">
+      <h3>{{ emp.firstName }} {{ emp.lastName }}</h3>
+      <p>{{ emp.position }}</p>
+      <small>{{ emp.employeeCode }} • {{ getContractTypeLabel(emp.contractType) }}</small>
+      <div class="card-actions">
+        <a [routerLink]="['/employees', emp.id]" class="btn btn-outline">Voir</a>
+        <a [routerLink]="['/employees', emp.id, 'edit']" class="btn btn-outline">Modifier</a>
+        <button class="btn btn-icon" (click)="toggleStatus(emp)">
+          <i class="material-icons">
+            {{ emp.active ? 'person_off' : 'person' }}
+          </i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- pagination -->
+<nav *ngIf="totalPages() > 1" aria-label="Pagination">
+  <ul class="pagination justify-content-center">
+    <li class="page-item" [class.disabled]="currentPage === 1">
+      <button
+        class="page-link"
+        aria-label="Précédent"
+        [attr.aria-disabled]="currentPage === 1"
+        (click)="prevPage()"
+      >
+        <span aria-hidden="true">&laquo;</span>
+      </button>
+    </li>
+
+    <li
+      class="page-item"
+      *ngFor="let p of pagesArray()"
+      [class.active]="p === currentPage"
+    >
+      <button
+        class="page-link"
+        (click)="goToPage(p)"
+      >
+        {{ p }}
+      </button>
+    </li>
+
+    <li class="page-item" [class.disabled]="currentPage === totalPages()">
+      <button
+        class="page-link"
+        aria-label="Suivant"
+        [attr.aria-disabled]="currentPage === totalPages()"
+        (click)="nextPage()"
+      >
+        <span aria-hidden="true">&raquo;</span>
+      </button>
+    </li>
+  </ul>
+</nav>
+</div>

@@ -1,0 +1,86 @@
+<div class="mb-5">
+  <h2 class="h4 mb-4">Administrateurs</h2>
+
+  <!-- Administrateurs actuels -->
+  <h5 class="h6 text-muted mb-3">Administrateurs actuels</h5>
+  <ul class="list-group mb-5">
+    <li class="list-group-item d-flex justify-content-between align-items-center"
+        *ngFor="let admin of admins">
+      <div class="d-flex align-items-center">
+        <span class="rounded-circle bg-primary text-white d-inline-flex
+                     justify-content-center align-items-center me-3"
+              style="width:40px;height:40px;">
+          {{ admin.firstName[0] }}{{ admin.lastName[0] }}
+        </span>
+
+        <div>
+          <div class="fw-semibold">{{ admin.firstName }} {{ admin.lastName }}</div>
+          <small class="text-muted">{{ admin.email }}</small>
+        </div>
+      </div>
+
+      <!-- Retrait interdit pour soi-même -->
+      <button *ngIf="admin.id !== currentUser?.id"
+              class="btn btn-sm btn-outline-danger"
+              (click)="removeAdmin(admin.id)"
+              title="Retirer les droits administrateur">
+        <i class="bi bi-dash-circle"></i>
+      </button>
+    </li>
+  </ul>
+
+  <!-- Invitation -->
+  <h5 class="h6 text-muted mb-3">Inviter un administrateur</h5>
+
+  <form [formGroup]="inviteForm" (ngSubmit)="sendInvitation()" class="row g-2 mb-5">
+    <div class="col-12 col-md">
+      <input type="email"
+             formControlName="email"
+             class="form-control"
+             placeholder="Adresse e-mail"
+             [class.is-invalid]="inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched">
+      <div class="invalid-feedback">
+        <ng-container *ngIf="inviteForm.get('email')?.errors as e">
+          <span *ngIf="e['required']">L’adresse est requise</span>
+          <span *ngIf="e['email']">Format invalide</span>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="col-auto">
+      <button type="submit"
+              class="btn btn-primary"
+              [disabled]="inviteForm.invalid || sending">
+        <span *ngIf="sending" class="spinner-border spinner-border-sm me-1"></span>
+        Inviter
+      </button>
+    </div>
+  </form>
+
+  <!-- Invitations en attente -->
+  <div *ngIf="invitations.length">
+    <h5 class="h6 text-muted mb-3">Invitations en attente</h5>
+
+    <ul class="list-group">
+      <li class="list-group-item d-flex justify-content-between align-items-center"
+          *ngFor="let inv of invitations">
+        <div>
+          <div>{{ inv.email }}</div>
+          <small class="text-muted">Expire le {{ inv.expiresAt | date:'dd/MM/yyyy' }}</small>
+        </div>
+
+        <button class="btn btn-sm btn-outline-secondary"
+                (click)="cancelInvitation(inv.id)"
+                title="Annuler l’invitation">
+          <i class="bi bi-x-circle"></i>
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Message d’erreur -->
+  <div *ngIf="error" class="alert alert-danger mt-4">
+    {{ error }}
+  </div>
+</div>
+

@@ -1,0 +1,185 @@
+<div class="site-edit-container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="btn btn-outline" [routerLink]="['/sites', site?.id]">
+        <i class="material-icons">arrow_back</i>
+        Retour
+      </button>
+      <h1 *ngIf="site">Modifier {{ site?.name }}</h1>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && site" class="card">
+    <form [formGroup]="siteForm" (ngSubmit)="onSubmit()" class="site-form">
+      <div class="form-section">
+        <h2>Informations du Site</h2>
+
+        <div class="form-group">
+          <label for="name" class="form-label">Nom du Site</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="form-control"
+            [class.is-invalid]="siteForm.get('name')?.invalid && siteForm.get('name')?.touched"
+          />
+          <div class="error-message" *ngIf="siteForm.get('name')?.invalid && siteForm.get('name')?.touched">
+            Le nom du site est requis
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="address" class="form-label">Adresse</label>
+            <input
+              type="text"
+              id="address"
+              formControlName="address"
+              class="form-control"
+              [class.is-invalid]="siteForm.get('address')?.invalid && siteForm.get('address')?.touched"
+            />
+            <div class="error-message" *ngIf="siteForm.get('address')?.invalid && siteForm.get('address')?.touched">
+              L'adresse est requise
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="city" class="form-label">Ville</label>
+            <input
+              type="text"
+              id="city"
+              formControlName="city"
+              class="form-control"
+              [class.is-invalid]="siteForm.get('city')?.invalid && siteForm.get('city')?.touched"
+            />
+            <div class="error-message" *ngIf="siteForm.get('city')?.invalid && siteForm.get('city')?.touched">
+              La ville est requise
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="zipCode" class="form-label">Code Postal</label>
+            <input
+              type="text"
+              id="zipCode"
+              formControlName="zipCode"
+              class="form-control"
+              [class.is-invalid]="siteForm.get('zipCode')?.invalid && siteForm.get('zipCode')?.touched"
+            />
+            <div class="error-message" *ngIf="siteForm.get('zipCode')?.invalid && siteForm.get('zipCode')?.touched">
+              Le code postal est requis
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="country" class="form-label">Pays</label>
+            <input
+              type="text"
+              id="country"
+              formControlName="country"
+              class="form-control"
+              [class.is-invalid]="siteForm.get('country')?.invalid && siteForm.get('country')?.touched"
+            />
+            <div class="error-message" *ngIf="siteForm.get('country')?.invalid && siteForm.get('country')?.touched">
+              Le pays est requis
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone" class="form-label">Téléphone</label>
+            <input
+              type="tel"
+              id="phone"
+              formControlName="phone"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-control"
+              [class.is-invalid]="siteForm.get('email')?.invalid && siteForm.get('email')?.touched"
+            />
+            <div class="error-message" *ngIf="siteForm.get('email')?.invalid && siteForm.get('email')?.touched">
+              L'email n'est pas valide
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Responsable du Site</h2>
+
+        <div class="form-group">
+          <label for="managerName" class="form-label">Nom du Responsable</label>
+          <input
+            type="text"
+            id="managerName"
+            formControlName="managerName"
+            class="form-control"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="managerEmail" class="form-label">Email du Responsable</label>
+            <input
+              type="email"
+              id="managerEmail"
+              formControlName="managerEmail"
+              class="form-control"
+              [class.is-invalid]="siteForm.get('managerEmail')?.invalid && siteForm.get('managerEmail')?.touched"
+            />
+            <div class="error-message" *ngIf="siteForm.get('managerEmail')?.invalid && siteForm.get('managerEmail')?.touched">
+              L'email n'est pas valide
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="managerPhone" class="form-label">Téléphone du Responsable</label>
+            <input
+              type="tel"
+              id="managerPhone"
+              formControlName="managerPhone"
+              class="form-control"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-outline"
+          [routerLink]="['/sites', site.id]"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="siteForm.invalid || saving"
+        >
+          <span *ngIf="saving" class="spinner-sm"></span>
+          <span *ngIf="!saving">Enregistrer les Modifications</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

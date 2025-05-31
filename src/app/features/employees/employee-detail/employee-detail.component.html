@@ -1,0 +1,106 @@
+<div class="employee-detail-container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="btn btn-outline" routerLink="/employees">
+        <i class="material-icons">arrow_back</i>
+        Retour
+      </button>
+      <h1 *ngIf="employee">{{ employee?.firstName }} {{ employee?.lastName }}</h1>
+    </div>
+
+    <div class="header-actions" *ngIf="employee">
+      <button
+        class="btn btn-outline"
+        (click)="toggleEmployeeStatus()"
+      >
+        <i class="material-icons">{{ employee?.active ? 'person_off' : 'person' }}</i>
+        {{ employee?.active ? 'Désactiver' : 'Activer' }}
+      </button>
+
+      <button
+        class="btn btn-primary"
+        [routerLink]="['/employees', employee?.id, 'edit']"
+      >
+        <i class="material-icons">edit</i>
+        Modifier
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && employee" class="employee-content">
+    <div class="employee-info card">
+      <div class="employee-header">
+        <div class="employee-avatar">
+          {{ employee?.firstName?.charAt(0) }}{{ employee?.lastName?.charAt(0) }}
+        </div>
+        <div class="employee-status">
+          <span class="badge" [class.badge-success]="employee?.active" [class.badge-warning]="!employee?.active">
+            {{ employee?.active ? 'Actif' : 'Inactif' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h2>Informations Personnelles</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Code Employé</label>
+            <p>{{ employee?.employeeCode }}</p>
+          </div>
+          <div class="info-item">
+            <label>Email</label>
+            <p>{{ employee?.email }}</p>
+          </div>
+          <div class="info-item">
+            <label>Téléphone</label>
+            <p>{{ employee?.phone || 'Non renseigné' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h2>Informations Professionnelles</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Poste</label>
+            <p>{{ employee?.position }}</p>
+          </div>
+          <div class="info-item">
+            <label>Département</label>
+            <p>{{ employee?.department || 'Non assigné' }}</p>
+          </div>
+          <div class="info-item">
+            <label>Type de Contrat</label>
+            <p>{{ contractTypes[employee.contractType] }}</p>
+          </div>
+          <div class="info-item">
+            <label>Heures Max. par Semaine</label>
+            <p>{{ employee?.maxHoursPerWeek }}h</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section" *ngIf="employee.skillSets?.length">
+        <h2>Compétences</h2>
+        <div class="skills-list">
+          <span class="skill-tag" *ngFor="let skill of employee.skillSets">
+            {{ skill }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="schedules-section card">
+      <h2>Plannings</h2>
+      <!-- Implement schedules list here -->
+    </div>
+  </div>
+</div>

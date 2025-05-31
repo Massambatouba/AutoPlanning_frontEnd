@@ -1,8 +1,11 @@
+import { AgentType } from "./agent-type.model";
+import { DayOfWeek } from "./day-of-week.model";
+
 export interface SiteShiftTemplate {
   id: number;
   siteId: number;
   name: string;
-  //dayOfWeek: DayOfWeek;
+  dayOfWeek: DayOfWeek;
   isActive: boolean;
   description?: string;
   createdAt: Date;
@@ -11,7 +14,7 @@ export interface SiteShiftTemplate {
 }
 
 export interface SiteShiftTemplateAgent {
-  //agentType: AgentType;
+  agentType: AgentType;
   startTime: string;
   endTime: string;
   requiredCount: number;

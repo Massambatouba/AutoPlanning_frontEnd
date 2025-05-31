@@ -1,0 +1,22 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Tableau de Bord</h1>
+    <div class="dashboard-actions">
+      <button class="btn btn-primary" routerLink="/schedules/create">
+        <i class="material-icons">add</i>
+        Créer un Planning
+      </button>
+    </div>
+  </header>
+  
+  <app-dashboard-stats [stats]="stats"></app-dashboard-stats>
+  
+  <div class="dashboard-sections">
+    <app-recent-schedules 
+      [loading]="loading"
+      [schedules]="recentSchedules">
+    </app-recent-schedules>
+    
+    <app-dashboard-sidebar></app-dashboard-sidebar>
+  </div>
+</div>
