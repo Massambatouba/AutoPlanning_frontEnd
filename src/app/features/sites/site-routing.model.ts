@@ -18,18 +18,23 @@ export const SITES_ROUTES: Routes = [
     path: ':id/edit',
     loadComponent: () => import('./site-edit/site-edit.component').then(m => m.SiteEditComponent)
   },
-  {
-    path: ':siteId/templates',
-    loadComponent: () => import('./site-shift-template/site-shift-template.component').then(m => m.SiteShiftTemplateComponent)
-  },
-  {
-    path: ':siteId/templates/create',
-    loadComponent: () => import('./site-shift-template/site-shift-template-create/site-shift-template-create.component').then(m => m.SiteShiftTemplateCreateComponent)
-  },
-  {
-    path: ':siteId/templates/:templateId',
-    loadComponent: () => import('./site-shift-template/site-shift-template-edit/site-shift-template-edit.component').then(m => m.SiteShiftTemplateEditComponent)
-  }
+
+{
+  path: ':siteId/weekly-rules',
+  loadComponent: () =>
+    import('./weekly-schedule/weekly-schedule.component')
+      .then(m => m.WeeklyScheduleComponent)
+},
+{
+    path: ':siteId/weekly-rules/create',
+    loadComponent: () => import('./weekly-schedule/weekly-create/weekly-create.component')
+    .then(m => m.WeeklyCreateComponent)
+},
+{
+    path: ':siteId/weekly-rules/:templateId/edit',
+    loadComponent: () => import('./weekly-schedule/weekly-edit/weekly-edit.component')
+    .then(m => m.WeeklyEditComponent)
+}
 ];
 
 @NgModule({

@@ -1,0 +1,66 @@
+<div class="templates-container">
+  <header class="page-header">
+    <div class="header-left">
+      <button class="btn btn-outline" [routerLink]="['/sites', siteId]">
+        <i class="material-icons">arrow_back</i>
+        Retour
+      </button>
+      <h1>Modèles de Vacation</h1>
+    </div>
+
+    <button class="btn btn-primary" [routerLink]="['create']">
+      <i class="material-icons">add</i>
+      Créer un Modèle
+    </button>
+  </header>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+  <div *ngIf="!loading && templates.length === 0" class="empty">
+    <i class="material-icons empty-icon">event_busy</i>
+    <p>Aucun modèle de vacation. Créez votre premier !</p>
+    <button class="btn btn-primary" [routerLink]="['create']">Créer un Modèle</button>
+  </div>
+
+  <div class="templates-grid" *ngIf="!loading && templates.length">
+    <div class="template-card" *ngFor="let template of templates">
+      <div class="card-top">
+        <h3>{{ template.name }}</h3>
+      </div>
+
+      <div class="card-details">
+        <div class="detail">
+          <i class="material-icons">calendar_today</i>
+          {{ getDayOfWeekLabel(template.dayOfWeek) }}
+        </div>
+        <div class="detail" *ngIf="template.description">
+          <i class="material-icons">description</i>
+          {{ template.description }}
+        </div>
+      </div>
+
+      <div class="agent-list">
+        <div class="agent" *ngFor="let agent of template.agents">
+          <div class="agent-info">
+            <strong>{{ getAgentTypeLabel(agent.agentType) }}</strong>
+            <small>{{ agent.startTime }} - {{ agent.endTime }}</small>
+          </div>
+          <span class="count">x{{ agent.requiredCount }}</span>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-icon" [routerLink]="['../weekly-rules', template.id, 'edit']" title="Modifier">
+          <i class="material-icons">edit</i>
+        </button>
+        <button class="btn-icon" (click)="deleteTemplate(template)" title="Supprimer">
+          <i class="material-icons">delete</i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

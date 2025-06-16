@@ -1,0 +1,99 @@
+ <div class="absences-container">
+      <div class="section-header">
+        <h2>Absences</h2>
+        <button class="btn btn-primary" (click)="showAddForm = true" *ngIf="!showAddForm">
+          <i class="material-icons">add</i>
+          Déclarer une Absence
+        </button>
+      </div>
+
+      <form *ngIf="showAddForm" [formGroup]="absenceForm" (ngSubmit)="onSubmit()" class="absence-form">
+        <div class="form-group">
+          <label class="form-label">Type d'Absence</label>
+          <select formControlName="type" class="form-control">
+            <option value="">Sélectionnez un type</option>
+            <option *ngFor="let type of absenceTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date de Début</label>
+            <input type="date" formControlName="startDate" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date de Fin</label>
+            <input type="date" formControlName="endDate" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Motif</label>
+          <textarea formControlName="reason" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="showAddForm = false">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="absenceForm.invalid || saving">
+            <span *ngIf="saving" class="spinner-sm"></span>
+            <span *ngIf="!saving">Enregistrer</span>
+          </button>
+        </div>
+      </form>
+
+<div class="absences-list">
+  <div *ngFor="let absence of absences" class="absence-card">
+
+    <div *ngIf="editingId !== absence.id; else editFormBlock">
+      <div class="absence-header">
+        <span class="badge" [ngClass]="getTypeClass(absence.type)">
+          {{ getTypeLabel(absence.type) }}
+        </span>
+        <span class="absence-date">
+          {{ absence.startDate | date:'dd/MM/yyyy' }} - {{ absence.endDate | date:'dd/MM/yyyy' }}
+        </span>
+      </div>
+
+      <div class="absence-content" *ngIf="absence.reason">
+        <p>{{ absence.reason }}</p>
+      </div>
+
+      <div *ngIf="canModifyOrDelete(absence)" class="absence-actions mt-2">
+        <button class="btn btn-sm btn-outline" (click)="startEdit(absence)">Modifier</button>
+        <button class="btn btn-sm btn-danger" (click)="delete(absence.id)">Supprimer</button>
+      </div>
+    </div>
+
+    <!-- Formulaire d'édition -->
+    <ng-template #editFormBlock>
+      <form [formGroup]="editForm" (ngSubmit)="submitEdit(absence.id)">
+        <div class="form-row">
+          <input type="date" formControlName="startDate" class="form-control">
+          <input type="date" formControlName="endDate" class="form-control">
+        </div>
+
+        <div class="form-group mt-2">
+          <select formControlName="type" class="form-control">
+            <option *ngFor="let type of absenceTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+        </div>
+
+        <div class="form-group mt-2">
+          <textarea formControlName="reason" class="form-control" placeholder="Motif..."></textarea>
+        </div>
+
+        <div class="absence-actions mt-2">
+          <button type="submit" class="btn btn-sm btn-success">Sauvegarder</button>
+          <button type="button" (click)="cancelEdit()" class="btn btn-sm btn-outline">Annuler</button>
+        </div>
+      </form>
+    </ng-template>
+  </div>
+</div>
+
+</div>

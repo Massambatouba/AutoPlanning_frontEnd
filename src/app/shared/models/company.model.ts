@@ -1,3 +1,5 @@
+import { Site } from "./site.model";
+
 export interface Company {
   id: number;
   name: string;
@@ -11,5 +13,6 @@ export interface Company {
   maxEmployees: number;
   maxSites: number;
   createdAt: Date;
+  sites?: Site[];
   updatedAt: Date;
 }

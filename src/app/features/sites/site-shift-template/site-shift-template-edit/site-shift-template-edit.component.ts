@@ -25,6 +25,8 @@ export class SiteShiftTemplateEditComponent implements OnInit {
   loading = true;
   saving = false;
   error = '';
+  siteId: number;
+  templateId: number;
 
   daysOfWeek = [
     { value: DayOfWeek.MONDAY, label: 'Lundi' },
@@ -42,7 +44,7 @@ export class SiteShiftTemplateEditComponent implements OnInit {
     { value: AgentType.SSIAP2, label: 'SSIAP 2' },
     { value: AgentType.SSIAP3, label: 'SSIAP 3' },
     { value: AgentType.CHEF_DE_POSTE, label: 'Chef de Poste' },
-    { value: AgentType.CHEF_DE_EQUIPE, label: 'Chef d\'Équipe' },
+    { value: AgentType.CHEF_DE_EQUIPE, label: "Chef d'Équipe" },
     { value: AgentType.RONDE, label: 'Ronde' },
     { value: AgentType.ASTREINTE, label: 'Astreinte' },
     { value: AgentType.FORMATION, label: 'Formation' }
@@ -54,6 +56,9 @@ export class SiteShiftTemplateEditComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute
   ) {
+    this.siteId = Number(this.route.snapshot.paramMap.get('siteId'));
+    this.templateId = Number(this.route.snapshot.paramMap.get('templateId'));
+
     this.templateForm = this.formBuilder.group({
       name: ['', Validators.required],
       dayOfWeek: ['', Validators.required],
@@ -63,10 +68,11 @@ export class SiteShiftTemplateEditComponent implements OnInit {
   }
 
   ngOnInit() {
-    const siteId = Number(this.route.snapshot.paramMap.get('siteId'));
-    const templateId = Number(this.route.snapshot.paramMap.get('templateId'));
+    this.loadTemplate();
+  }
 
-    this.templateService.getTemplate(siteId, templateId)
+  private loadTemplate() {
+    this.templateService.getTemplate(this.siteId, this.templateId)
       .subscribe({
         next: (template) => {
           this.templateForm.patchValue({
@@ -116,13 +122,10 @@ export class SiteShiftTemplateEditComponent implements OnInit {
     this.saving = true;
     this.error = '';
 
-    const siteId = Number(this.route.snapshot.paramMap.get('siteId'));
-    const templateId = Number(this.route.snapshot.paramMap.get('templateId'));
-
-    this.templateService.updateTemplate(siteId, templateId, this.templateForm.value)
+    this.templateService.updateTemplate(this.siteId, this.templateId, this.templateForm.value)
       .subscribe({
         next: () => {
-          this.router.navigate(['../../'], { relativeTo: this.route });
+          this.router.navigate(['../..'], { relativeTo: this.route });
         },
         error: (error) => {
           this.error = error.message;

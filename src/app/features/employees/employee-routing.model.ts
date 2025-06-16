@@ -11,7 +11,11 @@ export const EMPLOYEES_ROUTES: Routes = [
     path: 'create',
     loadComponent: () => import('./employee-create/employee-create.component').then(m => m.EmployeeCreateComponent)
   },
-   {
+  {
+    path: ':id/absences',
+    loadComponent: () => import('./employee-absences/employee-absences.component').then(m => m.EmployeeAbsencesComponent)
+  },
+  {
     path: 'employees',
     loadComponent: () => import('./employee-list/employee-list.component').then(m => m.EmployeeListComponent)
   },

@@ -1,33 +1,26 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { SiteShiftTemplateService } from 'src/app/services/site-shift-template.service';
-import { SiteShiftTemplate } from 'src/app/shared/models/site-shift-template.model';
-import { SiteRoutingModule } from '../site-routing.model';
+import { CommonModule } from '@angular/common';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { WeeklyScheduleService } from 'src/app/services/weekly-schedule.service';
+import { WeeklyScheduleRule } from 'src/app/shared/models/weekly-schedule.module';
 
 @Component({
+  selector: 'app-weekly-schedule',
   standalone: true,
-  selector: 'app-site-shift-template',
-  templateUrl:'./site-shift-template.component.html',
-  styleUrls: ['./site-shift-template.component.scss'],
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    SiteRoutingModule
-  ]
+  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
+  templateUrl: './weekly-schedule.component.html',
+  styleUrls: ['./weekly-schedule.component.scss']
 })
-export class SiteShiftTemplateComponent implements OnInit {
-   templates: SiteShiftTemplate[] = [];
+export class WeeklyScheduleComponent implements OnInit {
+  templates: WeeklyScheduleRule[] = [];
   loading = true;
   error = '';
   siteId: number;
 
   constructor(
     private route: ActivatedRoute,
-    private templateService: SiteShiftTemplateService
+    private templateService: WeeklyScheduleService
   ) {
     this.siteId = Number(this.route.snapshot.paramMap.get('siteId'));
   }
@@ -37,7 +30,7 @@ export class SiteShiftTemplateComponent implements OnInit {
   }
 
   private loadTemplates() {
-    this.templateService.getTemplates(this.siteId)
+    this.templateService.getWeeklyRules(this.siteId)
       .subscribe({
         next: (templates) => {
           this.templates = templates;
@@ -50,7 +43,7 @@ export class SiteShiftTemplateComponent implements OnInit {
       });
   }
 
-  toggleTemplateStatus(template: SiteShiftTemplate) {
+  toggleTemplateStatus(template: WeeklyScheduleRule) {
     this.templateService.toggleTemplateStatus(this.siteId, template.id)
       .subscribe({
         next: (updatedTemplate) => {
@@ -63,9 +56,9 @@ export class SiteShiftTemplateComponent implements OnInit {
       });
   }
 
-  deleteTemplate(template: SiteShiftTemplate) {
+  deleteTemplate(template: WeeklyScheduleRule) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce modèle ?')) {
-      this.templateService.deleteTemplate(this.siteId, template.id)
+      this.templateService.deleteAllWeeklyRules(this.siteId)
         .subscribe({
           next: () => {
             this.templates = this.templates.filter(t => t.id !== template.id);

@@ -15,7 +15,7 @@ export interface Schedule {
   createdAt: string | Date | undefined;
   updatedAt: Date;
   status: ScheduleStatus;
-  
+
 }
 
 export type ScheduleStatus =
@@ -28,8 +28,10 @@ export type ScheduleStatus =
 export interface ScheduleAssignment {
   id: number;
   scheduleId: number;
+  siteName?: string;
   employeeId: number;
-  date: Date;
+  shift?: string;
+  date: string;
   startTime: string;
   endTime: string;
   duration: number;
@@ -37,4 +39,17 @@ export interface ScheduleAssignment {
   status: 'ASSIGNED' | 'CONFIRMED' | 'DECLINED' | 'PENDING';
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface ScheduleAssignmentRequest {
+  /** Date au format ISO "YYYY-MM-DD" */
+  date: string;
+  /** Nom du site */
+  siteName: string;
+  /** Libellé du shift (ex. "MATIN", "NUIT") */
+  shift: string;
+  /** Heure de début au format "HH:mm" */
+  startTime: string;
+  /** Heure de fin au format "HH:mm" */
+  endTime: string;
 }

@@ -23,6 +23,10 @@ export interface Employee {
   active?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  address: string;
+  zipCode: string;
+  city: string;
+  country: string
 }
 
 export interface EmployeePreferences {
@@ -55,3 +59,31 @@ export interface EmployeePreferences {
   /** Jours de repos minimaux d’affilée */
   minConsecutiveDaysOff:    number;
 }
+
+export interface AssignmentDTO {
+  id: number;
+  siteName: string;
+  startTime: string;
+  shift: string;
+  agentType?: string;
+  endTime: string;
+  siteId?: number;
+  address: string;
+  city: string;
+  zipCode: string;
+  country: string;
+  absence?: {
+    type: string;
+  }
+  isAbsence?: boolean;
+  absenceType?: string;
+}
+
+export interface EmployeePlanningDTO {
+  employeeId: number;
+  scheduleId: number
+  employeeName: string;
+  calendar: { [key: string]: AssignmentDTO[] };
+  assignments: AssignmentDTO[];
+}
+
