@@ -2,10 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { SiteShiftTemplateService } from 'src/app/services/site-shift-template.service';
 import { AgentType } from 'src/app/shared/models/agent-type.model';
 import { DayOfWeek } from 'src/app/shared/models/day-of-week.model';
 import { SiteRoutingModule } from '../../site-routing.model';
+import { WeeklyScheduleService } from 'src/app/services/weekly-schedule.service';
 
 @Component({
   standalone: true,
@@ -21,9 +21,10 @@ import { SiteRoutingModule } from '../../site-routing.model';
   ]
 })
 export class SiteShiftTemplateCreateComponent {
-   templateForm: FormGroup;
+ templateForm: FormGroup;
   saving = false;
   error = '';
+  siteId: number;
 
   daysOfWeek = [
     { value: DayOfWeek.MONDAY, label: 'Lundi' },
@@ -41,7 +42,7 @@ export class SiteShiftTemplateCreateComponent {
     { value: AgentType.SSIAP2, label: 'SSIAP 2' },
     { value: AgentType.SSIAP3, label: 'SSIAP 3' },
     { value: AgentType.CHEF_DE_POSTE, label: 'Chef de Poste' },
-    { value: AgentType.CHEF_DE_EQUIPE, label: 'Chef d\'Équipe' },
+    { value: AgentType.CHEF_DE_EQUIPE, label: "Chef d'Équipe" },
     { value: AgentType.RONDE, label: 'Ronde' },
     { value: AgentType.ASTREINTE, label: 'Astreinte' },
     { value: AgentType.FORMATION, label: 'Formation' }
@@ -49,10 +50,11 @@ export class SiteShiftTemplateCreateComponent {
 
   constructor(
     private formBuilder: FormBuilder,
-    private templateService: SiteShiftTemplateService,
+    private templateService: WeeklyScheduleService,
     private router: Router,
     private route: ActivatedRoute
   ) {
+    this.siteId = Number(this.route.snapshot.paramMap.get('siteId'));
     this.templateForm = this.formBuilder.group({
       name: ['', Validators.required],
       dayOfWeek: ['', Validators.required],
@@ -89,12 +91,10 @@ export class SiteShiftTemplateCreateComponent {
     this.saving = true;
     this.error = '';
 
-    const siteId = Number(this.route.snapshot.paramMap.get('siteId'));
-
-    this.templateService.createTemplate(siteId, this.templateForm.value)
+    this.templateService.createTemplate(this.siteId, this.templateForm.value)
       .subscribe({
         next: () => {
-          this.router.navigate(['../'], { relativeTo: this.route });
+          this.router.navigate(['..'], { relativeTo: this.route });
         },
         error: (error) => {
           this.error = error.message;

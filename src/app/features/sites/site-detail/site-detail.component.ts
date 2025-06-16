@@ -6,6 +6,8 @@ import { SiteRoutingModule } from '../site-routing.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CompanyRoutingModule } from '../../company/company-routing.model';
+import { Schedule } from 'src/app/shared/models/schedule.model';
+import { ScheduleService } from 'src/app/services/schedule.service';
 
 @Component({
   standalone: true,
@@ -23,11 +25,14 @@ import { CompanyRoutingModule } from '../../company/company-routing.model';
 })
 export class SiteDetailComponent implements OnInit {
   site: Site | null = null;
+  schedules: Schedule[] = [];
+  loadingSchedules = false;
   loading = true;
   error = '';
 
   constructor(
     private route: ActivatedRoute,
+    private scheduleService: ScheduleService,
     private siteService: SiteService
   ) {}
 
@@ -46,6 +51,23 @@ export class SiteDetailComponent implements OnInit {
         error: (error) => {
           this.error = error.message;
           this.loading = false;
+        }
+      });
+}
+
+private loadSchedules() {
+    if (!this.site) return;
+
+    this.loadingSchedules = true;
+    this.scheduleService.getSchedulesBySite(this.site.id)
+      .subscribe({
+        next: (schedules) => {
+          this.schedules = schedules;
+          this.loadingSchedules = false;
+        },
+        error: (error) => {
+          this.error = error.message;
+          this.loadingSchedules = false;
         }
       });
   }

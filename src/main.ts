@@ -34,6 +34,7 @@ bootstrapApplication(AppComponent, {
     provideRouter(APP_ROUTES),
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimations(),
+    
     importProvidersFrom(
       LucideAngularModule.pick({
         Menu,

@@ -6,6 +6,7 @@ import { ScheduleService } from 'src/app/services/schedule.service';
 import { Schedule } from 'src/app/shared/models/schedule.model';
 import { CompanyRoutingModule } from '../../company/company-routing.model';
 import { ScheduleRoutingModule } from '../schedule-routing.model';
+import { CompanyService } from 'src/app/services/company.service';
 
 @Component({
   standalone: true,
@@ -28,147 +29,81 @@ export class ScheduleListComponent implements OnInit {
 
   // Filters
   searchTerm = '';
-  statusFilter = 'all';
+  statusFilter: 'all' | 'published' | 'draft' = 'all';
   siteFilter = 'all';
   monthFilter = 'all';
+  yearFilter   = new Date().getFullYear(); 
 
-  // Mock data for sites (would come from an API in production)
-  sites = [
-    { id: 1, name: 'Main Site' },
-    { id: 2, name: 'Downtown Branch' },
-    { id: 3, name: 'Airport Office' }
-  ];
+  sites: { id: number; name: string }[] = [];
+  
 
-  constructor(private scheduleService: ScheduleService) {}
+  constructor(private scheduleService: ScheduleService, private companySrv : CompanyService) {}
 
   ngOnInit(): void {
-    this.loadSchedules();
+    this.loadSites();
+    this.fetchSchedules()
   }
 
-  loadSchedules(): void {
-    // In a real app, this would be an API call
-    setTimeout(() => {
-      this.schedules = [
-        {
-          id: 1,
-          companyId: 1,
-          siteId: 1,
-          name: 'Main Site Schedule',
-          month: 4,
-          startDate: '2025-03-01',
-          endDate:   '2025-03-30',
-          status: 'COMPLETED',
-          year: 2025,
-          isPublished: true,
-          isSent: true,
-          sentAt: new Date('2025-03-25'),
-          completionRate: 100,
-          createdAt: new Date('2025-03-20'),
-          updatedAt: new Date('2025-03-25')
-        },
-        {
-          id: 2,
-          companyId: 1,
-          siteId: 2,
-          name: 'Downtown Branch',
-          month: 4,
-          year: 2025,
-          startDate: '2025-04-01',
-          endDate:   '2025-04-30',
-          status: 'COMPLETED',
-          isPublished: true,
-          isSent: false,
-          completionRate: 87,
-          createdAt: new Date('2025-04-22'),
-          updatedAt: new Date('2025-04-24')
-        },
-        {
-          id: 3,
-          companyId: 1,
-          siteId: 3,
-          name: 'Airport Office',
-          month: 1,
-          startDate: '2025-01-01',
-          endDate:   '2025-01-30',
-          status: 'COMPLETED',
-          year: 2025,
-          isPublished: false,
-          isSent: false,
-          completionRate: 62,
-          createdAt: new Date('2024-12-23'),
-          updatedAt: new Date('2025-01-23')
-        },
-        {
-          id: 4,
-          companyId: 1,
-          siteId: 1,
-          name: 'Main Site Schedule',
-          month: 3,
-          year: 2025,
-          isPublished: true,
-          startDate: '2025-03-01',
-          endDate:   '2025-03-30',
-          status: 'COMPLETED',
-          isSent: true,
-          sentAt: new Date('2025-02-25'),
-          completionRate: 100,
-          createdAt: new Date('2025-02-20'),
-          updatedAt: new Date('2025-02-25')
-        },
-        {
-          id: 5,
-          companyId: 1,
-          siteId: 2,
-          name: 'Downtown Branch',
-          month: 3,
-          startDate: '2025-03-01',
-          endDate:   '2025-03-30',
-          status: 'COMPLETED',
-          year: 2025,
-          isPublished: true,
-          isSent: true,
-          sentAt: new Date('2025-02-24'),
-          completionRate: 100,
-          createdAt: new Date('2025-02-15'),
-          updatedAt: new Date('2025-02-24')
-        }
-      ];
-
-      this.filteredSchedules = [...this.schedules];
-      this.loading = false;
-    }, 1000);
+  private loadSites() {
+    this.companySrv.getMyCompany().subscribe(c => this.sites = c.sites ?? []);
   }
 
-  applyFilters(): void {
-    this.filteredSchedules = this.schedules.filter(schedule => {
-      // Search term filter
-      if (this.searchTerm && !schedule.name.toLowerCase().includes(this.searchTerm.toLowerCase())) {
-        return false;
-      }
+    /** Appel à l’API avec les filtres courants */
+  fetchSchedules(): void {
 
-      // Status filter
-      if (this.statusFilter !== 'all') {
-        if (this.statusFilter === 'published' && !schedule.isPublished) {
-          return false;
-        }
-        if (this.statusFilter === 'draft' && schedule.isPublished) {
-          return false;
-        }
-      }
+    this.loading = true;
 
-      // Site filter
-      if (this.siteFilter !== 'all' && schedule.siteId !== +this.siteFilter) {
-        return false;
-      }
+    const params = {
+      siteId   : this.siteFilter  !== 'all' ? +this.siteFilter : undefined,
+      month    : this.monthFilter !== 'all' ? +this.monthFilter: undefined,
+      year     : this.yearFilter,
+      published: this.statusFilter === 'all'
+                   ? undefined
+                   : this.statusFilter === 'published'
+    };
 
-      // Month filter
-      if (this.monthFilter !== 'all' && schedule.month !== +this.monthFilter) {
-        return false;
-      }
+    this.scheduleService.list(params).subscribe({
+      next : list => {
+        // filtre “search” côté front uniquement (texte libre)
+        const term = this.searchTerm.toLowerCase();
+        this.schedules = term
+          ? list.filter(s => s.name.toLowerCase().includes(term))
+          : list;
 
-      return true;
+        this.loading = false;
+      },
+      error: err => {
+        console.error('Erreur chargement schedules', err);
+        this.loading = false;
+      }
     });
   }
+
+    /** Quand un champ de filtre change (ngModelChange) */
+  onFiltersChange() { this.fetchSchedules(); }
+
+  /** Envoi d’un planning */
+  sendSchedule(id: number) {
+    this.scheduleService.send(id).subscribe(() => this.fetchSchedules());
+  }
+
+applyFilters(): void {
+  this.loading = true;
+  this.scheduleService.list({
+      siteId: this.siteFilter === 'all' ? undefined : +this.siteFilter,
+      month:  this.monthFilter === 'all' ? undefined : +this.monthFilter,
+      published: this.statusFilter === 'all'
+                 ? undefined
+                 : this.statusFilter === 'published'
+  }).subscribe({
+      next: list => {
+        this.filteredSchedules = list;
+        this.loading = false;
+      },
+      error: err => { console.error(err); this.loading = false; }
+  });
+}
+
 
   getMonthName(month: number): string {
     const months = [
@@ -183,14 +118,5 @@ export class ScheduleListComponent implements OnInit {
     return site ? site.name : 'Unknown Site';
   }
 
-  sendSchedule(id: number): void {
-    // In a real app, this would call the API
-    console.log(`Sending schedule ${id}`);
-    const scheduleIndex = this.schedules.findIndex(s => s.id === id);
-    if (scheduleIndex !== -1) {
-      this.schedules[scheduleIndex].isSent = true;
-      this.schedules[scheduleIndex].sentAt = new Date();
-      this.applyFilters();
-    }
-  }
+
 }

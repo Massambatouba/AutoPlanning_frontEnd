@@ -45,7 +45,6 @@ getEmployees(department?: string, contractType?: string): Observable<Employee[]>
     return this.http.delete<void>(`${environment.apiUrl}/employees/${id}`);
   }
 
-
 /** Basculer statut actif/inactif */
   toggleEmployeeStatus(id: number): Observable<Employee> {
     return this.http.put<Employee>(`${this.base}/${id}/toggle-status`, {});
@@ -54,4 +53,13 @@ getEmployees(department?: string, contractType?: string): Observable<Employee[]>
   getEmployeeSchedules(id: number): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/employees/${id}/schedules`);
   }
+
+  /** Récupérer le planning mensuel d'un employé */
+getMonthlyPlanning(employeeId: number, month: number, year: number): Observable<any> {
+  const params = new HttpParams()
+    .set('month', month)
+    .set('year', year);
+  return this.http.get(`${environment.apiUrl}/planning/employee/${employeeId}`, { params });
+}
+
 }

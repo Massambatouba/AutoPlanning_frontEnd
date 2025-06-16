@@ -1,22 +1,29 @@
-<div class="employee-detail-container">
+<div *ngIf="!loading" class="employee-detail-container">
+  <!-- EN-TÊTE : bouton Retour, logo entreprise, nom de l'employé, actions -->
   <header class="page-header">
     <div class="header-left">
       <button class="btn btn-outline" routerLink="/employees">
         <i class="material-icons">arrow_back</i>
         Retour
       </button>
-      <h1 *ngIf="employee">{{ employee?.firstName }} {{ employee?.lastName }}</h1>
+      <!-- Logo de l'entreprise (si défini) -->
+      <div class="company-header" *ngIf="companyLogoUrl">
+        <img
+          [src]="companyLogoUrl"
+          alt="Logo de l’entreprise"
+          class="company-logo"
+        />
+      </div>
+      <h1 *ngIf="employee">{{ employee.firstName }} {{ employee.lastName }}</h1>
     </div>
 
     <div class="header-actions" *ngIf="employee">
-      <button
-        class="btn btn-outline"
-        (click)="toggleEmployeeStatus()"
-      >
-        <i class="material-icons">{{ employee?.active ? 'person_off' : 'person' }}</i>
-        {{ employee?.active ? 'Désactiver' : 'Activer' }}
+      <button class="btn btn-outline" (click)="toggleEmployeeStatus()">
+        <i class="material-icons">
+          {{ employee?.active ? "person_off" : "person" }}
+        </i>
+        {{ employee?.active ? "Désactiver" : "Activer" }}
       </button>
-
       <button
         class="btn btn-primary"
         [routerLink]="['/employees', employee?.id, 'edit']"
@@ -27,23 +34,30 @@
     </div>
   </header>
 
+  <!-- SPINNER / ERREUR -->
   <div *ngIf="loading" class="loading-container">
     <div class="spinner"></div>
   </div>
-
   <div *ngIf="error" class="alert alert-error">
     {{ error }}
   </div>
 
+  <!-- CONTENU PRINCIPAL -->
   <div *ngIf="!loading && employee" class="employee-content">
+    <!-- Infos de l'employé -->
     <div class="employee-info card">
       <div class="employee-header">
         <div class="employee-avatar">
-          {{ employee?.firstName?.charAt(0) }}{{ employee?.lastName?.charAt(0) }}
+          {{ employee?.firstName?.charAt(0) }}
+          {{ employee?.lastName?.charAt(0) }}
         </div>
         <div class="employee-status">
-          <span class="badge" [class.badge-success]="employee?.active" [class.badge-warning]="!employee?.active">
-            {{ employee?.active ? 'Actif' : 'Inactif' }}
+          <span
+            class="badge"
+            [class.badge-success]="employee?.active"
+            [class.badge-warning]="!employee?.active"
+          >
+            {{ employee?.active ? "Actif" : "Inactif" }}
           </span>
         </div>
       </div>
@@ -61,7 +75,11 @@
           </div>
           <div class="info-item">
             <label>Téléphone</label>
-            <p>{{ employee?.phone || 'Non renseigné' }}</p>
+            <p>{{ employee?.phone || "Non renseigné" }}</p>
+          </div>
+          <div class="info-item">
+            <label>Adresse</label>
+            <p>{{ employee?.address }}</p>
           </div>
         </div>
       </div>
@@ -75,7 +93,7 @@
           </div>
           <div class="info-item">
             <label>Département</label>
-            <p>{{ employee?.department || 'Non assigné' }}</p>
+            <p>{{ employee?.department || "Non assigné" }}</p>
           </div>
           <div class="info-item">
             <label>Type de Contrat</label>
@@ -98,9 +116,219 @@
       </div>
     </div>
 
-    <div class="schedules-section card">
-      <h2>Plannings</h2>
-      <!-- Implement schedules list here -->
+    <!-- Actions employé -->
+    <div class="employee-actions card">
+      <h2>Actions</h2>
+      <div class="actions-grid">
+        <a
+          [routerLink]="['/employees', employee.id, 'absences']"
+          class="action-card"
+        >
+          <i class="material-icons">event_busy</i>
+          <span>Gérer les Absences</span>
+        </a>
+        <a
+          [routerLink]="['/schedules']"
+          [queryParams]="{ employeeId: employee.id }"
+          class="action-card"
+        >
+          <i class="material-icons">calendar_today</i>
+          <span>Voir les Plannings</span>
+        </a>
+      </div>
     </div>
+
+    <!-- SECTION PLANNING EN GRILLE (TOUS LES JOURS) -->
+    <div class="schedules-table card" *ngIf="employeePlanning">
+      <h2>
+        Planning de {{ employee?.firstName }} – {{ currentMonthFullName() }}
+        {{ currentYear }}
+      </h2>
+
+      <table class="planning-grid">
+        <thead>
+          <!-- 1ʳᵉ ligne : initiales des jours -->
+          <tr>
+            <th class="corner-cell"></th>
+            <th
+              *ngFor="let d of tableDates; let i = index"
+              class="date-header"
+              [ngClass]="{
+                'weekend-cell': isWeekend(d),
+                'holiday-cell': isHoliday(tableDateKeys[i])
+              }"
+            >
+              {{ dayInitials[i] }}
+            </th>
+          </tr>
+          <!-- 2ᵉ ligne : numéro du jour sans zéro -->
+          <tr>
+            <th class="corner-cell-placeholder"></th>
+            <th
+              *ngFor="let d of tableDates; let i = index"
+              class="date-header"
+              [ngClass]="{
+                'weekend-cell': isWeekend(d),
+                'holiday-cell': isHoliday(tableDateKeys[i])
+              }"
+            >
+              {{ d | date : "d" }}
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let site of siteList">
+            <td class="site-name-cell">{{ site }}</td>
+            <td
+              *ngFor="let key of tableDateKeys; let i = index"
+              (click)="cellClicked(site, key)"
+              [ngClass]="{
+                'weekend-cell': isWeekend(tableDates[i]),
+                'holiday-cell': isHoliday(key),
+                'clickable-add':
+                  mode === 'add' && !assignmentsMap[site][key]?.length,
+                'clickable-del':
+                  mode === 'delete' && assignmentsMap[site][key]?.length
+              }"
+            >
+              <ng-container
+                *ngIf="assignmentsMap[site][key]?.length; else emptyCell"
+              >
+<div *ngFor="let a of assignmentsMap[site][key]"
+     class="assignment-content"
+     [ngClass]="{ 'absence': a.absence || a.absenceType }"
+     (click)="assignmentClicked(a, key, $event)">
+
+  <!-- Absence, qu’elle vienne de `absence` ou de `absenceType` -->
+  <ng-container *ngIf="a.absence || a.absenceType; else normalAssign">
+    <span class="absence-label">
+      {{ (a.absence?.type || a.absenceType) | absenceTypeAbbreviation }}
+    </span>
+  </ng-container>
+
+  <!-- Vacation normale -->
+  <ng-template #normalAssign>
+    <span class="role-label">
+      {{ a.agentType | agentTypeAbbreviation }}
+    </span>
+
+    <div class="horaires" *ngIf="a.startTime && a.endTime">
+      {{ a.startTime | slice:0:5 }}–{{ a.endTime | slice:0:5 }}
+    </div>
+  </ng-template>
+</div>
+
+
+
+              </ng-container>
+              <ng-template #emptyCell>
+                <div class="no-assign"></div>
+              </ng-template>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="daily-total-row">
+            <td class="site-name-cell">
+              <strong>Total quotidien attribué</strong>
+            </td>
+            <td
+              *ngFor="let _ of tableDateKeys; let i = index"
+              class="daily-total-cell"
+            >
+              <strong *ngIf="dailyTotalMin[i] > 0">{{
+                formatMinutesToHours(dailyTotalMin[i])
+              }}</strong>
+            </td>
+          </tr>
+        </tfoot>
+
+      </table>
+
+      <div class="site-details card">
+        <h3>Détails des sites</h3>
+        <div class="site-info" *ngFor="let siteName of siteList">
+          <ng-container *ngIf="getSiteByName(siteName) as fullSite">
+            <div class="site-line">
+              <strong>{{ fullSite.name }}</strong><br />
+              {{ fullSite.address }}, {{ fullSite.zipCode }} {{ fullSite.city }}
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-totals card">
+  <h3>Récapitulatif des heures</h3>
+    <div class="summary-row" *ngIf="totalOrdinaryMin">
+      <span>🕓 Heures normales (semaine hors nuit)</span>
+      <strong>{{ formatMinutesToHours(totalOrdinaryMin) }}</strong>
+    </div>
+    <div class="summary-row" *ngIf="totalNightMin">
+      <span>🌙 Heures de nuit (21h–6h)</span>
+      <strong>{{ formatMinutesToHours(totalNightMin) }}</strong>
+    </div>
+    <div class="summary-row" *ngIf="totalSundayMin">
+      <span>📅 Heures dominicales (dimanches)</span>
+      <strong>{{ formatMinutesToHours(totalSundayMin) }}</strong>
+    </div>
+    <div class="summary-row" *ngIf="totalHolidayMin">
+      <span>🏖️ Heures jours fériés officiels</span>
+      <strong>{{ formatMinutesToHours(totalHolidayMin) }}</strong>
+    </div>
+  </div>
+        <!-- Add form overlay -->
+  <div *ngIf="showAddForm" class="overlay">
+  <div class="overlay-card">
+    <h3>{{ editingAssignment ? 'Modifier' : 'Ajouter' }} une vacation</h3>
+    <form *ngIf="employee" [formGroup]="addForm" (ngSubmit)="onAddAssignment()">
+      <label>Site</label>
+      <select formControlName="siteId">
+        <option *ngFor="let site of allSites" [value]="site.id">{{ site.name }}</option>
+      </select>
+
+      <label>Date</label>
+      <input formControlName="date" readonly />
+
+      <label>Shift</label>
+      <input formControlName="shift" placeholder="MATIN / SOIR" />
+
+      <label>Début (HH:mm)</label>
+      <input formControlName="startTime" placeholder="08:00" />
+
+      <label>Fin (HH:mm)</label>
+      <input formControlName="endTime" placeholder="12:00" />
+
+      <label>Type d’agent</label>
+      <input formControlName="agentType" placeholder="ADS / SSIAP / ..."/>
+
+        <label>Notes</label>
+        <input formControlName="notes" placeholder="Notes facultatives" />
+
+      <div class="actions d-flex justify-content-between">
+          <div>
+            <button type="submit" [disabled]="addForm.invalid" class="btn btn-primary me-2">
+              {{ editingAssignment ? 'Modifier' : 'Ajouter' }}
+            </button>
+            <button type="button" (click)="showAddForm = false" class="btn btn-outline-secondary">
+              Annuler
+            </button>
+          </div>
+
+          <!-- ✅ Bouton supprimer (seulement si modification) -->
+          <button
+            *ngIf="editingAssignment"
+            type="button"
+            class="btn btn-danger"
+            (click)="confirmDelete()"
+          >
+            <i class="bi bi-trash-fill me-1"></i> Supprimer
+          </button>
+      </div>
+    </form>
+  </div>
+</div>
+
   </div>
 </div>

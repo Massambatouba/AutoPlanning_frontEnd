@@ -1,0 +1,83 @@
+<form [formGroup]="templateForm" (ngSubmit)="onSubmit()" class="template-form"> 
+  <div formArrayName="rules">
+    <div *ngFor="let rule of rules.controls; let i = index" [formGroupName]="i" class="card mb-4 p-3 border rounded bg-light">
+
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2>{{ getDayLabel(rule.get('dayOfWeek')?.value) || 'Jour inconnu' }}</h2>
+        <button type="button" class="btn btn-sm btn-danger" (click)="removeRule(i)">
+          Supprimer ce jour
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label>Nom du Modèle</label>
+        <input type="text" formControlName="name" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>Jour</label>
+        <select formControlName="dayOfWeek" class="form-control">
+          <option *ngFor="let day of daysOfWeek" [value]="day.value">{{ day.label }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea formControlName="description" class="form-control" rows="2"></textarea>
+      </div>
+
+      <div formArrayName="agents">
+        <h3>Agents</h3>
+        <ng-container *ngIf="rule.get('agents') as agentsControl">
+          <div *ngFor="let agent of getAgentsControls(rule).controls; let j = index" [formGroupName]="j" class="agent-block">
+            <div class="form-row d-flex gap-3">
+              <div class="form-group flex-fill">
+                <label>Type</label>
+                <select formControlName="agentType" class="form-control">
+                  <option *ngFor="let type of agentTypes" [value]="type.value">{{ type.label }}</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Nombre Requis</label>
+                <input type="number" formControlName="requiredCount" min="1" class="form-control" />
+              </div>
+            </div>
+
+            <div class="form-row d-flex gap-3">
+              <div class="form-group">
+                <label>Début</label>
+                <input type="time" formControlName="startTime" class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label>Fin</label>
+                <input type="time" formControlName="endTime" class="form-control" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea formControlName="notes" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+        </ng-container>
+
+        <button type="button" class="btn btn-outline mt-2" (click)="addAgentToRule(i)">
+          <i class="material-icons">add</i> Ajouter un agent
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions mt-4 d-flex justify-content-between">
+    <button type="submit" class="btn btn-primary" [disabled]="templateForm.invalid || saving">
+      <span *ngIf="saving" class="spinner-sm"></span>
+      <span *ngIf="!saving">Enregistrer toutes les modifications</span>
+    </button>
+
+    <button type="button" class="btn btn-danger" (click)="deleteAllRules()">
+      Supprimer toutes les règles
+    </button>
+  </div>
+</form>

@@ -17,6 +17,10 @@ export class CompanyService {
     return this.http.get<Company>(`${environment.apiUrl}/companies/${companyId}`);
   }
 
+getMyCompany(): Observable<Company> {
+  return this.http.get<Company>(`${environment.apiUrl}/companies/company`, );
+}
+
   /** Met-à-jour une compagnie (multipart/form-data) */
   updateCompany(companyId: number, formData: FormData): Observable<Company> {
     return this.http.put<Company>(`${environment.apiUrl}/companies/${companyId}`, formData);
