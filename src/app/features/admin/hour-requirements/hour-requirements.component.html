@@ -1,0 +1,110 @@
+    <div class="hour-requirements-container">
+      <header class="page-header">
+        <h1>Gestion des Exigences d'Heures</h1>
+        <button class="btn btn-primary" (click)="initializeRequirements()" [disabled]="loading">
+          <i class="material-icons">refresh</i>
+          Initialiser les Exigences
+        </button>
+      </header>
+
+      <div *ngIf="loading" class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement des exigences...</p>
+      </div>
+
+      <div *ngIf="error" class="alert alert-error">
+        <i class="material-icons">error</i>
+        {{ error }}
+      </div>
+
+      <div *ngIf="!loading" class="requirements-grid">
+        <div *ngFor="let requirement of requirements" class="requirement-card">
+          <div class="card-header">
+            <h3>{{ getContractLabel(requirement.contractType) }}</h3>
+            <span class="badge badge-success" *ngIf="requirement.isActive">Actif</span>
+          </div>
+
+          <div class="card-content">
+            <div class="requirement-info">
+              <div class="hours-display">
+                <span class="hours-number">{{ requirement.minimumHoursPerMonth }}</span>
+                <span class="hours-unit">heures/mois</span>
+              </div>
+
+              <p class="description">{{ requirement.description }}</p>
+            </div>
+
+            <div class="edit-form" *ngIf="editingId === requirement.id">
+              <div class="form-group">
+                <label>Heures minimum par mois</label>
+                <input
+                  type="number"
+                  [(ngModel)]="editForm.minimumHoursPerMonth"
+                  class="form-control"
+                  [disabled]="requirement.contractType === 'FULL_TIME'"
+                  min="1"
+                />
+                <small *ngIf="requirement.contractType === 'FULL_TIME'" class="help-text">
+                  Les exigences FULL_TIME sont fixées à 151h (légal français)
+                </small>
+              </div>
+
+              <div class="form-group">
+                <label>Description</label>
+                <textarea
+                  [(ngModel)]="editForm.description"
+                  class="form-control"
+                  rows="2"
+                ></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-outline" (click)="cancelEdit()">
+                  Annuler
+                </button>
+                <button
+                  class="btn btn-primary"
+                  (click)="saveRequirement(requirement)"
+                  [disabled]="saving"
+                >
+                  <span *ngIf="saving" class="spinner-sm"></span>
+                  <span *ngIf="!saving">Enregistrer</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="card-actions" *ngIf="editingId !== requirement.id">
+              <button
+                class="btn btn-outline"
+                (click)="startEdit(requirement)"
+                [disabled]="requirement.contractType === 'FULL_TIME'"
+              >
+                <i class="material-icons">edit</i>
+                Modifier
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <h3>
+          <i class="material-icons">info</i>
+          Informations Importantes
+        </h3>
+        <ul>
+          <li>
+            <strong>FULL_TIME :</strong> Fixé à 151h/mois selon la législation française (non modifiable)
+          </li>
+          <li>
+            <strong>Autres contrats :</strong> Configurables selon les besoins de votre entreprise
+          </li>
+          <li>
+            Ces exigences sont utilisées pour vérifier la conformité des plannings
+          </li>
+          <li>
+            Les employés non conformes seront signalés lors de la génération des plannings
+          </li>
+        </ul>
+      </div>
+    </div>

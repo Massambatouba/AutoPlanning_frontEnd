@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -10,13 +10,14 @@ import {
   AssignmentDTO
 } from 'src/app/shared/models/employee.model';
 import { Company } from 'src/app/shared/models/company.model';
-import { CompanyRoutingModule } from '../../company/company-routing.model';
 import { EmployeeRoutingModule } from '../employee-routing.model';
 import { AssignmentService } from 'src/app/services/assignment.service';
 import { ScheduleAssignmentRequest } from 'src/app/shared/models/schedule.model';
 import { AgentTypeAbbreviationPipe } from 'src/app/pipes/agent-type-abbreviation.pipe';
 import { AbsenceTypeAbbreviationPipe } from 'src/app/pipes/absence-type-abbreviation.pipe';
 import { Site } from 'src/app/shared/models/site.model';
+import { Subscription } from 'rxjs';
+import { CompanyRoutingModule } from '../../company/company-routing.module';
 
 @Component({
   standalone: true,
@@ -34,7 +35,7 @@ import { Site } from 'src/app/shared/models/site.model';
     AbsenceTypeAbbreviationPipe
   ]
 })
-export class EmployeeDetailComponent implements OnInit {
+export class EmployeeDetailComponent implements OnInit, OnDestroy {
   employee: Employee | null = null;
   loading = true;
   allSites: Site[] = [];
@@ -45,6 +46,8 @@ export class EmployeeDetailComponent implements OnInit {
 
     // modes to add or delete
   mode!: 'none' | 'add' | 'delete' | 'edit';
+
+  private sub!: Subscription;
 
 
   selectedDateKey: string = '';
@@ -106,11 +109,18 @@ export class EmployeeDetailComponent implements OnInit {
     this.initAddForm();
     this.loadEmployee(id);
 
+    this.sub = this.assignmentService.refresh$
+    .subscribe(() => this.loadPlanning());
+
     // setTimeout(() => {
     //   this.showAddForm = true;
     // }, 2000);
 
 
+  }
+
+  ngOnDestroy() {
+  this.sub?.unsubscribe();
   }
 
 getSiteByName(name: string): Site | undefined {
@@ -128,6 +138,10 @@ getSiteByName(name: string): Site | undefined {
       date: ['', Validators.required],
       shift: ['', Validators.required],
       agentType: ['', Validators.required],
+      adress : ['', Validators.required],
+      zipCode: [''],
+      city   : [''],
+      country: [''],
       notes: [''],
       employeeId: ['', Validators.required],
       startTime: ['', [Validators.required, Validators.pattern(/^[0-2]\d:[0-5]\d$/)]],

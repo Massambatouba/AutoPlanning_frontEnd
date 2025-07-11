@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SiteService } from 'src/app/services/site.service';
 import { Site } from 'src/app/shared/models/site.model';
-import { CompanyRoutingModule } from '../../company/company-routing.model';
 import { SiteRoutingModule } from '../site-routing.model';
 
 @Component({

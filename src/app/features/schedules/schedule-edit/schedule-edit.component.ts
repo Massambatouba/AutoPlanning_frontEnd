@@ -4,8 +4,8 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ScheduleService } from 'src/app/services/schedule.service';
 import { Schedule } from 'src/app/shared/models/schedule.model';
-import { CompanyRoutingModule } from '../../company/company-routing.model';
 import { ScheduleRoutingModule } from '../schedule-routing.model';
+import { CompanyRoutingModule } from '../../company/company-routing.module';
 
 @Component({
   standalone: true,

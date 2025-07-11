@@ -78,8 +78,8 @@
             <p>{{ employee?.phone || "Non renseigné" }}</p>
           </div>
           <div class="info-item">
-            <label>Adresse</label>
-            <p>{{ employee?.address }}</p>
+            <label>Adress</label>
+            <p>{{ employee?.adress }}</p>
           </div>
         </div>
       </div>
@@ -138,6 +138,35 @@
       </div>
     </div>
 
+
+    <!-- ────── ENTÊTE DU PLANNING ─────────────────────────────────────────── -->
+<div class="planning-header card p-3 mb-4 d-flex flex-wrap align-items-start">
+
+      <!-- Logo société à gauche -->
+      <img src="assets/img/logo-entreprise.svg"
+          alt="Logo entreprise"
+          class="company-logo me-4 mb-3" />
+
+      <!-- Colonne droite : infos employé + alerte -->
+      <div class="flex-grow-1">
+
+        <!-- Nom + adresse employé -->
+        <address class="employee-address fw-semibold mb-2">
+          {{ employee.firstName }} {{ employee?.lastName }}<br>
+          {{ employee.adress }}<br>
+          {{ employee.zipCode }} {{ employee.city }}
+        </address>
+
+        <!-- Phrase d’avertissement -->
+        <div class="alert alert-info py-1 px-2 small mb-0">
+          <strong>ATTENTION&nbsp;:</strong>
+          ce planning est susceptible d'être modifié
+        </div>
+
+      </div>
+    </div>
+
+
     <!-- SECTION PLANNING EN GRILLE (TOUS LES JOURS) -->
     <div class="schedules-table card" *ngIf="employeePlanning">
       <h2>
@@ -195,29 +224,29 @@
               <ng-container
                 *ngIf="assignmentsMap[site][key]?.length; else emptyCell"
               >
-<div *ngFor="let a of assignmentsMap[site][key]"
-     class="assignment-content"
-     [ngClass]="{ 'absence': a.absence || a.absenceType }"
-     (click)="assignmentClicked(a, key, $event)">
+        <div *ngFor="let a of assignmentsMap[site][key]"
+            class="assignment-content"
+            [ngClass]="{ 'absence': a.absence || a.absenceType }"
+            (click)="assignmentClicked(a, key, $event)">
 
-  <!-- Absence, qu’elle vienne de `absence` ou de `absenceType` -->
-  <ng-container *ngIf="a.absence || a.absenceType; else normalAssign">
-    <span class="absence-label">
-      {{ (a.absence?.type || a.absenceType) | absenceTypeAbbreviation }}
-    </span>
-  </ng-container>
+          <!-- Absence, qu’elle vienne de `absence` ou de `absenceType` -->
+          <ng-container *ngIf="a.absence || a.absenceType; else normalAssign">
+            <span class="absence-label">
+              {{ (a.absence?.type || a.absenceType) | absenceTypeAbbreviation }}
+            </span>
+          </ng-container>
 
-  <!-- Vacation normale -->
-  <ng-template #normalAssign>
-    <span class="role-label">
-      {{ a.agentType | agentTypeAbbreviation }}
-    </span>
+          <!-- Vacation normale -->
+          <ng-template #normalAssign>
+            <span class="role-label">
+              {{ a.agentType | agentTypeAbbreviation }}
+            </span>
 
-    <div class="horaires" *ngIf="a.startTime && a.endTime">
-      {{ a.startTime | slice:0:5 }}–{{ a.endTime | slice:0:5 }}
-    </div>
-  </ng-template>
-</div>
+            <div class="horaires" *ngIf="a.startTime && a.endTime">
+              {{ a.startTime | slice:0:5 }}–{{ a.endTime | slice:0:5 }}
+            </div>
+          </ng-template>
+        </div>
 
 
 

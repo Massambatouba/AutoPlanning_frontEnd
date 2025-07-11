@@ -345,3 +345,39 @@ button {
     transform: rotate(360deg);
   }
 }
+
+/* ───────── Design Tokens ───────── */
+:root {
+  /* Brand */
+  --brand-500:  #2563eb;
+  --brand-700:  #1d4ed8;
+
+  /* Neutrals */
+  --surface:       #ffffff;
+  --surface-alt:   #f9fafb;
+  --border:        #e5e7eb;
+  --text-primary:  #111827;
+  --text-secondary:#4b5563;
+
+  /* Semantic */
+  --success-500: #059669;
+  --warning-500: #d97706;
+  --error-500:   #dc2626;
+
+  /* Radius & Shadow */
+  --radius-lg: 1rem;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, .04);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--surface-alt);
+  color: var(--text-primary);
+}
+
+h1, h2, h3 { margin: 0 0 .5rem 0; line-height: 1.2; }

@@ -15,3 +15,4 @@ export interface Site {
   createdAt: Date;
   updatedAt: Date;
 }
+

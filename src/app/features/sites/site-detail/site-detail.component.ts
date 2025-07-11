@@ -5,9 +5,9 @@ import { Site } from 'src/app/shared/models/site.model';
 import { SiteRoutingModule } from '../site-routing.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CompanyRoutingModule } from '../../company/company-routing.model';
 import { Schedule } from 'src/app/shared/models/schedule.model';
 import { ScheduleService } from 'src/app/services/schedule.service';
+import { CompanyRoutingModule } from '../../company/company-routing.module';
 
 @Component({
   standalone: true,

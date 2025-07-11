@@ -6,7 +6,7 @@ import { AdminService } from 'src/app/services/admin.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { AdminInvitation } from 'src/app/shared/models/admin-invation.model';
 import { User } from 'src/app/shared/models/user.model';
-import { CompanyRoutingModule } from '../../company-routing.model';
+import { CompanyRoutingModule } from '../../company-routing.module';
 
 @Component({
   standalone: true,
@@ -18,7 +18,6 @@ import { CompanyRoutingModule } from '../../company-routing.model';
       FormsModule,
       ReactiveFormsModule,
       RouterModule,
-      CompanyRoutingModule,
       CompanyRoutingModule
     ]
 })

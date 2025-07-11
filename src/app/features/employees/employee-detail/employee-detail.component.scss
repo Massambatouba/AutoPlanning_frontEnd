@@ -531,6 +531,20 @@
   color: #842029;
 }
 
+/* Logo : hauteur fixe, laisse le texte remonter à côté */
+.company-logo {
+  height: 60px;              // ajustez à votre sauce
+  object-fit: contain;
+}
+
+/* Address : un rendu “facture” léger */
+.employee-address {
+  font-size: .9rem;
+  line-height: 1.35;
+}
+  
+
+
 
 
 

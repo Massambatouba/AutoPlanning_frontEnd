@@ -4,11 +4,11 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { EmployeeService } from 'src/app/services/employee.service';
 import { Employee } from 'src/app/shared/models/employee.model';
-import { CompanyRoutingModule } from '../../company/company-routing.model';
 import { EmployeeRoutingModule } from '../employee-routing.model';
 import { Site } from 'src/app/shared/models/site.model';
 import { SiteService } from 'src/app/services/site.service';
 import { AgentType } from 'src/app/shared/models/agent-type.model';
+import { CompanyRoutingModule } from '../../company/company-routing.module';
 
 @Component({
   standalone: true,
@@ -98,6 +98,10 @@ export class EmployeeEditComponent implements OnInit{
       siteId:                    [null, Validators.required],
       preferredSites:            [[]],                          // pas required en édition
       skillSets:                 [''],
+      adress : ['', Validators.required],
+      zipCode: [''],
+      city   : [''],
+      country: [''],
       agentTypes:                [[], Validators.required],
 
       /* ---- Préférences ---- */
@@ -199,7 +203,7 @@ export class EmployeeEditComponent implements OnInit{
       phone:         fv.phone,
       position:      fv.position,
       department:    fv.department,
-      address: fv.address,
+      adress: fv.adress,
       city: fv.city,
       country: fv.country,
       zipCode: fv.zipCode,

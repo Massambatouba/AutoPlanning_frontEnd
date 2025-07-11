@@ -1,0 +1,88 @@
+<!-- src/app/features/schedules/schedule-compliance/schedule-compliance.component.html -->
+<!-- Affiché seulement quand la réponse est là -->
+<div *ngIf="complianceData" class="card mb-3 shadow-sm">
+  <div class="card-body">
+
+    <!-- Titre + badge taux global -->
+    <h5 class="card-title d-flex align-items-center gap-2 mb-3">
+      Conformité du planning
+
+      <span class="badge fw-normal"
+            [ngClass]="{
+              'bg-success':  complianceData.overallComplianceRate >= 95,
+              'bg-warning':  complianceData.overallComplianceRate >= 80 && complianceData.overallComplianceRate < 95,
+              'bg-danger' :  complianceData.overallComplianceRate < 80
+            }">
+        {{ complianceData.overallComplianceRate | number : '1.0-0' }} %
+      </span>
+    </h5>
+
+    <span class="badge"
+      [ngClass]="{
+        'badge-success': rate >= 95,
+        'badge-warning': rate >= 80 && rate < 95,
+        'badge-error'  : rate < 80
+      }">
+      {{ rate }} %
+    </span>
+
+    <!-- Résumé chiffres clés -->
+    <ul class="list-inline mb-4">
+      <li class="list-inline-item me-4">
+        Agents conformes : <strong>{{ complianceData.compliantEmployees }}</strong>
+      </li>
+
+      <li class="list-inline-item me-4">
+        Non conformes :
+        <strong class="text-danger">{{ complianceData.nonCompliantEmployees }}</strong>
+      </li>
+
+      <li class="list-inline-item">
+        Effectif total : <strong>{{ complianceData.totalEmployees }}</strong>
+      </li>
+    </ul>
+
+    <!-- Détail par employé (facultatif) -->
+    <table *ngIf="complianceData.employeeSummaries?.length"
+           class="table table-sm table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Employé·e</th>
+          <th class="text-end">Heures requises</th>
+          <th class="text-end">Heures effectuées</th>
+          <th class="text-center">Écart</th>
+          <th class="text-center">%</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let emp of complianceData.employeeSummaries">
+          <td>{{ emp.employeeName }}</td>
+
+          <td class="text-end">{{ emp.requiredHours | number : '1.0-0' }} h</td>
+
+          <td class="text-end">{{ emp.actualHours   | number : '1.0-0' }} h</td>
+
+          <td class="text-center"
+              [ngClass]="{
+                'text-success': emp.missingHours === 0,
+                'text-warning': emp.missingHours  > 0,
+                'text-danger' : emp.missingHours  < 0
+              }">
+            {{ emp.missingHours | number : '1.0-0' }} h
+          </td>
+
+          <td class="text-center">
+            {{ emp.compliancePercentage | number : '1.0-0' }} %
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Message si aucun détail -->
+    <p class="text-muted mb-0" *ngIf="!complianceData.employeeSummaries?.length">
+      Aucun détail d’heures disponible pour ce planning.
+    </p>
+
+  </div>
+</div>

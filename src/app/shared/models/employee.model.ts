@@ -9,6 +9,7 @@ export interface Employee {
   firstName: string;
   agentTypes : AgentType[];
   lastName: string;
+  employeeName?: string;
   email: string;
   phone?: string;
   position: string;
@@ -23,7 +24,7 @@ export interface Employee {
   active?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
-  address: string;
+  adress: string;
   zipCode: string;
   city: string;
   country: string
@@ -85,5 +86,34 @@ export interface EmployeePlanningDTO {
   employeeName: string;
   calendar: { [key: string]: AssignmentDTO[] };
   assignments: AssignmentDTO[];
+}
+
+export interface EmployeeGridRow {
+  id:        number;
+  name:      string;
+  totalMin:  number;
+}
+
+// export interface EmployeePlanning {
+//   id: number;
+//   fullName: string;
+// }
+
+export interface SitePlanningResponse {
+  siteId:    number;
+  siteName:  string;
+  month:     number;
+  year:      number;
+  calendar:  Record<string, EmployeeShiftDto[]>;
+  employees: EmployeePlanningDTO[];              // ← nouveau champ
+}
+
+export interface EmployeeShiftDto {
+  employeeId:  number;
+  employeeName: string | null;
+  agentType:   string;
+  startTime:   string;
+  endTime:     string;
+  shiftLabel?: string | null;
 }
 
