@@ -9,6 +9,10 @@ export const SCHEDULES_ROUTES: Routes = [
     loadComponent: () => import('./schedule-list/schedule-list.component').then(m => m.ScheduleListComponent)
   },
   {
+    path: 'generate',
+    loadComponent: () => import('./schedule-geration-modal/schedule-geration-modal.component').then(m => m.ScheduleGerationModalComponent)
+  },
+  {
     path: 'create',
     loadComponent: () => import('./schedule-create/schedule-create.component').then(m => m.ScheduleCreateComponent)
   },

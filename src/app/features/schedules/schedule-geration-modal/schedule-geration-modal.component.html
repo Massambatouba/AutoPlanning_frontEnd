@@ -1,0 +1,107 @@
+  <div class="modal-header bg-primary text-white">
+      <h4 class="modal-title">
+        <i class="bi bi-magic me-2"></i>
+        Génération Automatique de Planning
+      </h4>
+      <button type="button" class="btn-close btn-close-white" (click)="activeModal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="generationForm" (ngSubmit)="onSubmit()">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>Génération intelligente :</strong> Le système va automatiquement affecter les employés
+          selon leurs disponibilités, compétences et les règles définies pour le site.
+        </div>
+
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <label for="siteId" class="form-label">
+              <i class="bi bi-building me-1"></i>
+              Site *
+            </label>
+            <select
+              id="siteId"
+              formControlName="siteId"
+              class="form-select"
+              [class.is-invalid]="generationForm.get('siteId')?.invalid && generationForm.get('siteId')?.touched"
+            >
+              <option value="">Sélectionnez un site</option>
+              <option *ngFor="let site of sites" [value]="site.id">
+                {{ site.name }} - {{ site.city }}
+              </option>
+            </select>
+            <div class="invalid-feedback" *ngIf="generationForm.get('siteId')?.invalid && generationForm.get('siteId')?.touched">
+              Veuillez sélectionner un site
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="month" class="form-label">
+              <i class="bi bi-calendar-month me-1"></i>
+              Mois *
+            </label>
+            <select
+              id="month"
+              formControlName="month"
+              class="form-select"
+              [class.is-invalid]="generationForm.get('month')?.invalid && generationForm.get('month')?.touched"
+            >
+              <option value="">Sélectionnez un mois</option>
+              <option *ngFor="let month of months" [value]="month.value">
+                {{ month.label }}
+              </option>
+            </select>
+            <div class="invalid-feedback" *ngIf="generationForm.get('month')?.invalid && generationForm.get('month')?.touched">
+              Veuillez sélectionner un mois
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="year" class="form-label">
+              <i class="bi bi-calendar-year me-1"></i>
+              Année *
+            </label>
+            <select
+              id="year"
+              formControlName="year"
+              class="form-select"
+              [class.is-invalid]="generationForm.get('year')?.invalid && generationForm.get('year')?.touched"
+            >
+              <option value="">Sélectionnez une année</option>
+              <option *ngFor="let year of years" [value]="year">
+                {{ year }}
+              </option>
+            </select>
+            <div class="invalid-feedback" *ngIf="generationForm.get('year')?.invalid && generationForm.get('year')?.touched">
+              Veuillez sélectionner une année
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Attention :</strong> Si un planning existe déjà pour cette période,
+          il sera remplacé par le nouveau planning généré.
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">
+        <i class="bi bi-x-lg me-1"></i>
+        Annuler
+      </button>
+      <button
+        type="button"
+        class="btn btn-success"
+        (click)="onSubmit()"
+        [disabled]="generationForm.invalid || loading"
+      >
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!loading" class="bi bi-magic me-1"></i>
+        {{ loading ? 'Génération...' : 'Générer Planning' }}
+      </button>
+    </div>

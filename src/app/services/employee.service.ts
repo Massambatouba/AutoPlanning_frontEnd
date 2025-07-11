@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Employee } from '../shared/models/employee.model';
+import { map, Observable } from 'rxjs';
+import { Employee, EmployeePlanningDTO } from '../shared/models/employee.model';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -23,10 +23,27 @@ getEmployees(department?: string, contractType?: string): Observable<Employee[]>
     return this.http.get<Employee[]>(this.base, { params });
 }
 
+// getSiteEmployees(siteId: number) {
+//   return this.http
+//     .get<EmployeePlanningDTO[]>(`${environment.apiUrl}/employees/all`)
+//     .pipe( map(list => list.filter(e => e.siteId === siteId)) );
+// }
+
 /** Tous les employés (sans filtre) */
   getAllEmployees(): Observable<Employee[]> {
     return this.http.get<Employee[]>(`${this.base}/all`);
   }
+
+getSiteEmployees(siteId: number): Observable<EmployeePlanningDTO[]> {
+  return this.http.get<EmployeePlanningDTO[]>(
+    `${environment.apiUrl}/sites/${siteId}/employees`
+  ).pipe(
+    map(employees => employees.filter(emp =>
+      emp.employeeId && emp.employeeName && emp.employeeName.trim() !== ''
+    ))
+  );
+}
+
 
 /** Récupérer un seul */
   getEmployeeById(id: number): Observable<Employee> {

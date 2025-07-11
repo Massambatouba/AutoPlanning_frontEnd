@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { CompanyRoutingModule } from 'src/app/features/company/company-routing.model';
+import { CompanyRoutingModule } from 'src/app/features/company/company-routing.module';
 
 
 interface DashboardStats {

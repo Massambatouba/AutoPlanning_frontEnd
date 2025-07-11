@@ -1,9 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Schedule, ScheduleAssignment, ScheduleAssignmentRequest } from '../shared/models/schedule.model';
-import { AssignmentDTO } from '../shared/models/employee.model';
+import { Schedule, ScheduleAssignment, ScheduleAssignmentRequest, WeeklyScheduleRule } from '../shared/models/schedule.model';
+import { AssignmentDTO, EmployeePlanningDTO, SitePlanningResponse } from '../shared/models/employee.model';
 
 @Injectable({
   providedIn: 'root'
@@ -25,9 +25,9 @@ export class ScheduleService {
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
         if (v === undefined || v === null) { return; }
-      
+
         if (typeof v === 'string' && v === 'all') { return; }
-      
+
         httpParams = httpParams.set(k, String(v));
       });
     }
@@ -46,64 +46,90 @@ export class ScheduleService {
     return this.http.post(`${environment.apiUrl}/schedules`, data);
   }
 
-  generateAssignments(scheduleId: number): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/schedules/${scheduleId}/generate-assignments`, {});
+  generateAssignments(scheduleId: number): Observable<Schedule> {
+    return this.http.post<Schedule>(`${environment.apiUrl}/schedules/${scheduleId}/generate-assignments`, {});
   }
-  
-  getScheduleAssignments(scheduleId: number): Observable<any> {
-  return this.http.get(
-    `${environment.apiUrl}/schedules/${scheduleId}/assignments`
+
+  assignments(scheduleId: number): Observable<ScheduleAssignment[]> {
+    return this.http.get<ScheduleAssignment[]>(`${this.api}/schedules/${scheduleId}/assignments`);
+  }
+
+
+
+  getScheduleAssignments(scheduleId: number): Observable<ScheduleAssignment[]> {
+  return this.http.get<ScheduleAssignment[]>(
+    `${this.api}/schedules/${scheduleId}/assignments`
   );
   }
 
-  updateAssignment(scheduleId: number, assignmentId: number, data: any): Observable<any> {
-    return this.http.put(`${environment.apiUrl}/schedules/${scheduleId}/assignments/${assignmentId}`, data);
+  updateAssignment(scheduleId: number, id: number, dto: Partial<ScheduleAssignment>) {
+    return this.http.put(`${this.api}/${scheduleId}/assignments/${id}`, dto);
   }
 
-  deleteAssignment(
-    scheduleId: number,
-    assignmentId: number
-  ): Observable<void> {
-    return this.http.delete<void>(
-      `/schedules/${scheduleId}/assignments/${assignmentId}`
-    );
+  generateSchedule(siteId: number, month: number, year: number): Observable<Schedule> {
+    return this.http.post<Schedule>(`${environment.apiUrl}/generate`, null, {
+    params: {
+    siteId: siteId.toString(),
+    month: month.toString(),
+    year: year.toString()
+    }
+    });
   }
 
+getSitePlanning(siteId: number, month: number, year: number) {
+  return this.http.get<SitePlanningResponse>(
+    `${environment.apiUrl}/planning/site/${siteId}`,
+    { params: { month, year } }
+  );
+}
 
-  updateSchedule(id: number, data: Partial<Schedule>): Observable<Schedule> {
+
+deleteAssignment(scheduleId: number, id: number) {
+    return this.http.delete(`${this.api}/${scheduleId}/assignments/${id}`);
+}
+
+
+updateSchedule(id: number, data: Partial<Schedule>): Observable<Schedule> {
     return this.http.put<Schedule>(
       `${environment.apiUrl}/schedules/${id}`,
       data
     );
-  }
+}
 
-  publishSchedule(scheduleId: number): Observable<any> {
+publishSchedule(scheduleId: number): Observable<any> {
     return this.http.post(`${environment.apiUrl}/schedules/${scheduleId}/publish`, {});
-  }
+}
 
-  send(scheduleId: number): Observable<any> {
+send(scheduleId: number): Observable<any> {
     return this.http.post(`${environment.apiUrl}/schedules/${scheduleId}/send`, {});
-  }
+}
 
-  getSchedulesBySite(siteId: number): Observable<Schedule[]> {
+getSchedulesBySite(siteId: number): Observable<Schedule[]> {
     return this.http.get<Schedule[]>(`${environment.apiUrl}/schedules`, {
       params: { siteId: siteId.toString() }
     });
-  }
+}
 
-  getSchedulesByEmployee(employeeId: number): Observable<Schedule[]> {
+getSiteEmployees(siteId: number): Observable<EmployeePlanningDTO[]> {
+  return this.http.get<EmployeePlanningDTO[]>(
+    `${environment.apiUrl}/sites/${siteId}/employees`
+  );
+}
+
+
+getSchedulesByEmployee(employeeId: number): Observable<Schedule[]> {
     return this.http.get<Schedule[]>(`${environment.apiUrl}/schedules`, {
       params: { employeeId: employeeId.toString() }
     });
-  }
+}
 
-  addAssignment(
-    scheduleId: number,
-    request: ScheduleAssignmentRequest
-  ): Observable<AssignmentDTO> {
-    return this.http.post<AssignmentDTO>(
-      `/schedules/${scheduleId}/assignments`,
-      request
-    );
-  }
+addAssignment(scheduleId: number, dto: ScheduleAssignmentRequest) {
+    return this.http.post(`${this.api}/${scheduleId}/assignments`, dto);
+}
+
+getWeeklyRules(siteId: number) {
+  return this.http.get<WeeklyScheduleRule[]>(`${environment.apiUrl}/sites/${siteId}/weekly-schedule-rule`);
+}
+
+
 }

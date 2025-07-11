@@ -37,7 +37,7 @@
           [class.is-invalid]="scheduleForm.get('siteId')?.invalid && scheduleForm.get('siteId')?.touched"
         >
           <option value="">Sélectionnez un site</option>
-          <option *ngFor="let site of sites" [value]="site.id">{{ site.name }}</option>
+          <option *ngFor="let site of listSites" [value]="site.id">{{ site.name }}</option>
         </select>
         <div class="error-message" *ngIf="scheduleForm.get('siteId')?.invalid && scheduleForm.get('siteId')?.touched">
           Veuillez sélectionner un site
@@ -82,8 +82,8 @@
         <button type="button" class="btn btn-outline" routerLink="/schedules">
           Annuler
         </button>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           class="btn btn-primary"
           [disabled]="scheduleForm.invalid || loading"
         >

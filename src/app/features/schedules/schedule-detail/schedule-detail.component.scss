@@ -1,151 +1,115 @@
-.schedule-detail-container {
-  padding: var(--space-4);
+/*  ↓↓↓  colle TOUT ce bloc dans schedule-detail.component.css  ↓↓↓ */
+
+/* ---------- variables locales (CSS natif) ------------ */
+:host {
+  --border:   #dee2e6;
+  --surface:  #ffffff;
+  --surface-alt: #f8f9fa;
+  --brand:    #0d6efd;
+  --head:     #ffb300;
+  --dispo:    #8bc34a;
+  --indispo:  #f44336;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-6);
-  
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-  }
-  
-  .header-actions {
-    display: flex;
-    gap: var(--space-2);
-  }
+/* ---------- barre du haut ----------------------------- */
+.topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.75rem 1rem;
+  background:var(--surface-alt);
+  border-bottom:1px solid var(--border);
+}
+.left{display:flex;align-items:center;gap:1rem;}
+.btn-back{border:0;background:none;color:var(--brand);display:flex;align-items:center;gap:.35rem}
+
+/* ---------- KPI --------------------------------------- */
+.stats-grid{display:grid;gap:1rem;margin:1rem 1rem 0;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+.card{
+  background:var(--surface);border-radius:.75rem;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+  padding:1rem 1.25rem;
+}
+.card .value{font-size:1.75rem;font-weight:700}
+
+/* ---------- tableau plan ------------------------------- */
+.schedule-table{width:100%;border-collapse:collapse}
+.schedule-table thead th,
+.schedule-table tbody td{font-size:.75rem;padding:.3rem .25rem;border:1px solid var(--border)}
+.schedule-table thead th{background:var(--surface-alt)}
+.legend-row th{background:var(--head);color:#fff}
+.legend-dispo{background:var(--dispo)!important;color:#fff}
+.legend-indispo{background:var(--indispo)!important;color:#fff}
+
+.sticky-col{
+  position:sticky;left:0;z-index:3;
+  background:#fff;min-width:180px;text-align:left
 }
 
-.loading-container {
-  display: flex;
-  justify-content: center;
-  padding: var(--space-8);
+.avatar{width:25px;height:25px;border-radius:50%;background:var(--brand);
+  color:#fff;font-size:.65rem;display:inline-flex;align-items:center;justify-content:center;margin-right:.3rem}
+
+/* slots (= vacations) ---------------------------------- */
+.slot{
+  display:block;
+  margin-bottom:2px;
+  border:1px solid var(--border);
+  border-radius:.25rem;
+  padding:0 2px;
+  cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.slot:hover{background:var(--surface-alt)}
+[data-type="ADS"]{background:#e3f2fd;border-color:#2196f3}
+[data-type="CHEF_DE_POSTE"]{background:#fff3e0;border-color:#ff9800}
+
+/* slot vide --------------------------------------------- */
+.slot-empty{
+  width:100%;height:18px;
+  border:1px dashed var(--border);
+  background:transparent;color:var(--border);
+  font-size:.75rem;line-height:16px;text-align:center;
+  cursor:pointer
+}
+.legend-row i.bi-check-lg {
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
-.card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: var(--space-6);
-  margin-bottom: var(--space-6);
+/* extrait schedule-detail.component.scss */
+.btn {
+  /* style commun */
+  display: flex; align-items: center; gap: .35rem;
+  padding: .55rem 1rem; border: none; border-radius: .6rem;
+  font-weight: 600; cursor: pointer;
+  background-color: #ff9800;
+
+  &.ghost   { background: none;             color: var(--text-sec);
+              &:hover { background: var(--surface-alt); } }
+
+  &.success { background: var(--success); background-color: #ff9800;   color: white;
+              &:hover { filter: brightness(.9); } }
 }
 
-.schedule-info {
-  .info-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--space-6);
-  }
-  
-  .info-item {
-    label {
-      display: block;
-      font-size: 0.875rem;
-      color: var(--neutral-600);
-      margin-bottom: var(--space-2);
-    }
-    
-    p {
-      font-size: 1.125rem;
-      font-weight: 500;
-      margin: 0;
-    }
-  }
-}
 
-.completion-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  
-  .progress-bar {
-    flex: 1;
-    height: 8px;
-    background-color: var(--neutral-200);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  
-  .progress {
-    height: 100%;
-    border-radius: 4px;
-    
-    &.high {
-      background-color: var(--success-500);
-    }
-    
-    &.medium {
-      background-color: var(--warning-500);
-    }
-    
-    &.low {
-      background-color: var(--error-500);
-    }
-  }
-  
-  span {
-    font-weight: 500;
-    min-width: 48px;
-  }
-}
 
-.assignments-section {
-  h2 {
-    margin-bottom: var(--space-4);
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--neutral-200);
-  }
-}
+.slot-empty:hover{background:var(--surface-alt);color:var(--brand)}
 
-.empty-state {
-  text-align: center;
-  padding: var(--space-8);
-  color: var(--neutral-500);
-  
-  p {
-    margin-bottom: var(--space-4);
-  }
-}
+/* besoin non couvert ------------------------------------ */
+td.gap,.slot-empty.gap{background:#ffebee;border-color:#e53935}
 
-.assignments-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--space-4);
-}
+/* légende ------------------------------------------------ */
+.legend{margin:1rem}
+.legend h3{font-size:1rem;font-weight:600;margin-bottom:.5rem}
+.items{display:flex;flex-wrap:wrap;gap:.75rem 1rem}
+.item{display:flex;align-items:center;gap:.35rem;font-size:.8125rem}
+.dot{width:12px;height:12px;border-radius:50%;background:currentColor}
+.item[data-type="ADS"]{color:#2196f3}
+.item[data-type="CHEF_DE_POSTE"]{color:#ff9800}
 
-.assignment-card {
-  background-color: var(--neutral-50);
-  border-radius: 6px;
-  padding: var(--space-4);
-  
-  .assignment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-3);
-    
-    h3 {
-      margin: 0;
-      font-size: 1.125rem;
-    }
-  }
-  
-  .assignment-details {
-    p {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      margin-bottom: var(--space-2);
-      color: var(--neutral-700);
-      
-      i {
-        font-size: 1.125rem;
-        color: var(--neutral-500);
-      }
-    }
-  }
+/* responsive vite-fait ---------------------------------- */
+@media(max-width:992px){
+  .sticky-col{min-width:150px}
+  .schedule-table thead th,
+  .schedule-table tbody td{min-width:60px}
 }

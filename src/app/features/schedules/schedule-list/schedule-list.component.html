@@ -1,143 +1,144 @@
-    <div class="schedule-list-container">
-      <header class="page-header">
-        <h1>Schedules</h1>
-        <div class="header-actions">
-          <button class="btn btn-outline">
-            <i class="material-icons">filter_list</i>
-            Filter
-          </button>
-          <button class="btn btn-primary" routerLink="/schedules/create">
-            <i class="material-icons">add</i>
-            Create Schedule
-          </button>
-        </div>
-      </header>
+<div class="container my-4">
+       <header class="page-header">
+         <h1>Plannings</h1>
+         <div class="header-actions">
++          <button class="btn btn-success me-2" (click)="openGenerationModal()">
++            <i class="bi bi-magic"></i>
++            Générer Planning
++          </button>
+           <button class="btn btn-outline-secondary me-2">
+-            <i class="material-icons">filter_list</i>
++            <i class="bi bi-funnel"></i>
+             Filtrer
+           </button>
+           <button class="btn btn-primary" routerLink="/schedules/create">
+-            <i class="material-icons">add</i>
++            <i class="bi bi-plus-lg"></i>
+             Créer Planning
+           </button>
+         </div>
+       </header>
 
-      <div class="filter-bar">
-        <div class="search-box">
-          <i class="material-icons">search</i>
-          <input
-            type="text"
-            placeholder="Search schedules..."
-            [(ngModel)]="searchTerm"
-            (input)="applyFilters()"
-          />
-        </div>
-
-        <div class="filter-group">
-          <label>Status:</label>
-          <select [(ngModel)]="statusFilter" (change)="applyFilters()">
-            <option value="all">All</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>Site:</label>
-          <select [(ngModel)]="siteFilter" (change)="applyFilters()">
-            <option value="all">All Sites</option>
-            <option *ngFor="let site of sites" [value]="site.id">{{ site.name }}</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>Month:</label>
-          <select [(ngModel)]="monthFilter" (change)="applyFilters()">
-            <option value="all">All Months</option>
-            <option value="1">January</option>
-            <option value="2">February</option>
-            <option value="3">March</option>
-            <option value="4">April</option>
-            <option value="5">May</option>
-            <option value="6">June</option>
-            <option value="7">July</option>
-            <option value="8">August</option>
-            <option value="9">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-          </select>
-        </div>
+  <div class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+      <label class="form-label">Search</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search schedules..."
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()" />
       </div>
+    </div>
 
-      <div *ngIf="loading" class="loading-container">
-        <div class="spinner"></div>
-      </div>
+    <div class="col-md-2">
+      <label class="form-label">Status</label>
+      <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
+        <option value="all">All</option>
+        <option value="published">Published</option>
+        <option value="draft">Draft</option>
+      </select>
+    </div>
 
-      <div *ngIf="!loading && filteredSchedules.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <i class="material-icons">event_busy</i>
+    <div class="col-md-3">
+      <label class="form-label">Site</label>
+      <select class="form-select" [(ngModel)]="siteFilter" (change)="applyFilters()">
+        <option value="all">All Sites</option>
+        <option *ngFor="let site of sites" [value]="site.id">{{ site.name }}</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Month</label>
+      <select class="form-select" [(ngModel)]="monthFilter" (change)="applyFilters()">
+        <option value="all">All Months</option>
+        <option value="1">January</option>
+        <option value="2">February</option>
+        <option value="3">March</option>
+        <option value="4">April</option>
+        <option value="5">May</option>
+        <option value="6">June</option>
+        <option value="7">July</option>
+        <option value="8">August</option>
+        <option value="9">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && filteredSchedules.length === 0" class="text-center my-5">
+    <i class="bi bi-calendar-x display-1 mb-3"></i>
+    <h3>No schedules found</h3>
+    <p>Create your first schedule or adjust your filters.</p>
+    <a class="btn btn-primary" routerLink="/schedules/create">Create Schedule</a>
+  </div>
+
+  <div *ngIf="!loading && filteredSchedules.length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div *ngFor="let schedule of filteredSchedules" class="col">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">{{ schedule.name }}</h5>
+          <span class="badge" [ngClass]="schedule.isPublished ? 'bg-success' : 'bg-warning'">
+            {{ schedule.isPublished ? 'Published' : 'Draft' }}
+          </span>
         </div>
-        <h3>No schedules found</h3>
-        <p>Create your first schedule or adjust your filters.</p>
-        <button class="btn btn-primary" routerLink="/schedules/create">
-          Create Schedule
-        </button>
-      </div>
 
-      <div *ngIf="!loading && filteredSchedules.length > 0" class="schedule-grid">
-        <div *ngFor="let schedule of filteredSchedules" class="schedule-card">
-          <div class="schedule-header">
-            <h3>{{ schedule.name }}</h3>
-            <span class="badge"
-              [class.badge-success]="schedule.isPublished"
-              [class.badge-warning]="!schedule.isPublished">
-              {{ schedule.isPublished ? 'Published' : 'Draft' }}
-            </span>
-          </div>
+        <div class="card-body">
+          <p><i class="bi bi-calendar-event"></i> {{ getMonthName(schedule.month) }} {{ schedule.year }}</p>
+          <p><i class="bi bi-building"></i> {{ getSiteName(schedule.siteId) }}</p>
 
-          <div class="schedule-details">
-            <div class="schedule-period">
-              <i class="material-icons">calendar_today</i>
-              <span>{{ getMonthName(schedule.month) }} {{ schedule.year }}</span>
-            </div>
-
-            <div class="schedule-site">
-              <i class="material-icons">business</i>
-              <span>{{ getSiteName(schedule.siteId) }}</span>
-            </div>
-
-            <div class="schedule-completion">
-              <div class="progress-bar-container">
-                <div class="progress-bar"
-                  [style.width.%]="schedule.completionRate"
-                  [class.high]="schedule.completionRate > 80"
-                  [class.medium]="schedule.completionRate > 50 && schedule.completionRate <= 80"
-                  [class.low]="schedule.completionRate <= 50">
-                </div>
+          <div class="mb-2">
+            <div class="progress">
+              <div
+                class="progress-bar"
+                role="progressbar"
+                [style.width.%]="schedule.completionRate"
+                [ngClass]="{
+                  'bg-success': schedule.completionRate > 80,
+                  'bg-warning': schedule.completionRate > 50 && schedule.completionRate <= 80,
+                  'bg-danger': schedule.completionRate <= 50
+                }">
               </div>
-              <span class="progress-text">{{ schedule.completionRate }}% Complete</span>
             </div>
+            <small>{{ schedule.completionRate }}% Complete</small>
           </div>
+        </div>
 
-          <div class="schedule-meta">
-            <div class="last-updated">
-              <span>Updated: {{ schedule.updatedAt | date:'MMM d, y' }}</span>
-            </div>
-            <div class="email-status">
-              <i class="material-icons"
-                [class.sent]="schedule.isSent"
-                [class.not-sent]="!schedule.isSent">
-                {{ schedule.isSent ? 'mail' : 'mail_outline' }}
-              </i>
-              <span>{{ schedule.isSent ? 'Sent' : 'Not sent' }}</span>
-            </div>
+        <div class="card-footer d-flex justify-content-between align-items-center">
+          <small>Updated: {{ schedule.updatedAt | date:'MMM d, y' }}</small>
+          <div>
+            <i
+              [ngClass]="schedule.isSent ? 'bi bi-envelope-fill text-success' : 'bi bi-envelope text-secondary'">
+            </i>
+            <span>{{ schedule.isSent ? 'Sent' : 'Not sent' }}</span>
           </div>
+        </div>
 
-          <div class="card-actions">
-            <a [routerLink]="['/schedules', schedule.id]" class="btn btn-outline">
-              <i class="material-icons">visibility</i>
-              View
-            </a>
-            <a [routerLink]="['/schedules', schedule.id, 'edit']" class="btn btn-outline">
-              <i class="material-icons">edit</i>
-              Edit
-            </a>
-            <button class="btn btn-icon" *ngIf="!schedule.isSent && schedule.isPublished" (click)="sendSchedule(schedule.id)">
-              <i class="material-icons">send</i>
-            </button>
-          </div>
+        <div class="card-footer d-flex justify-content-between">
+          <a [routerLink]="['/schedules', schedule.id]" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-eye"></i> View
+          </a>
+          <a [routerLink]="['/schedules', schedule.id, 'edit']" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-pencil"></i> Edit
+          </a>
+          <button
+            class="btn btn-outline-primary btn-sm"
+            *ngIf="!schedule.isSent && schedule.isPublished"
+            (click)="sendSchedule(schedule.id)">
+            <i class="bi bi-send"></i>
+          </button>
         </div>
       </div>
     </div>
+  </div>
+</div>

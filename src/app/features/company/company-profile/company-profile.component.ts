@@ -6,8 +6,8 @@ import { RouterModule } from '@angular/router';
 import { AuthService }    from 'src/app/services/auth.service';
 import { CompanyService } from 'src/app/services/company.service';
 import { Company }        from 'src/app/shared/models/company.model';
-import { CompanyRoutingModule } from '../company-routing.model';
 import { CompanyAdminsComponent } from './company-admins/company-admins.component';
+import { CompanyRoutingModule } from '../company-routing.module';
 
 @Component({
   standalone: true,

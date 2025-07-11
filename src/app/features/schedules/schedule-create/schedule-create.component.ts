@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ScheduleService } from 'src/app/services/schedule.service';
-import { CompanyRoutingModule } from '../../company/company-routing.model';
 import { ScheduleRoutingModule } from '../schedule-routing.model';
+import { Site } from 'src/app/shared/models/site.model';
+import { SiteService } from 'src/app/services/site.service';
+import { CompanyRoutingModule } from '../../company/company-routing.module';
 
 @Component({
   standalone: true,
@@ -20,20 +22,16 @@ import { ScheduleRoutingModule } from '../schedule-routing.model';
     ScheduleRoutingModule
   ]
 })
-export class ScheduleCreateComponent {
+export class ScheduleCreateComponent implements OnInit {
    scheduleForm: FormGroup;
   loading = false;
   error = '';
 
-  // Données simulées pour les sites
-  sites = [
-    { id: 1, name: 'Site Principal' },
-    { id: 2, name: 'Agence Centre-Ville' },
-    { id: 3, name: 'Bureau Aéroport' }
-  ];
+  listSites!: Site[];
 
   constructor(
     private formBuilder: FormBuilder,
+    private siteService: SiteService,
     private scheduleService: ScheduleService,
     private router: Router
   ) {
@@ -43,6 +41,9 @@ export class ScheduleCreateComponent {
       month: ['', [Validators.required, Validators.min(1), Validators.max(12)]],
       year: ['', [Validators.required, Validators.min(2024), Validators.max(2030)]]
     });
+  }
+  ngOnInit(): void {
+    this.onGetSite()
   }
 
   onSubmit() {
@@ -63,6 +64,11 @@ export class ScheduleCreateComponent {
           this.loading = false;
         }
       });
+  }
+  onGetSite(){
+    this.siteService.getSites()
+    .subscribe(sites =>this.listSites = sites)
+    console.log(this.listSites);
   }
 
   getMonths() {

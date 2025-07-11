@@ -1,12 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { ScheduleService } from 'src/app/services/schedule.service';
 import { Schedule } from 'src/app/shared/models/schedule.model';
-import { CompanyRoutingModule } from '../../company/company-routing.model';
 import { ScheduleRoutingModule } from '../schedule-routing.model';
+import { RouterLink } from '@angular/router';
 import { CompanyService } from 'src/app/services/company.service';
+import { Site } from 'src/app/shared/models/site.model';
+import { SiteService } from 'src/app/services/site.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { CompanyRoutingModule } from '../../company/company-routing.module';
+import { ScheduleGerationModalComponent } from '../schedule-geration-modal/schedule-geration-modal.component';
 
 @Component({
   standalone: true,
@@ -17,7 +21,7 @@ import { CompanyService } from 'src/app/services/company.service';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    RouterModule,
+    RouterLink,
     CompanyRoutingModule,
     ScheduleRoutingModule
   ]
@@ -26,26 +30,65 @@ export class ScheduleListComponent implements OnInit {
   loading = true;
   schedules: Schedule[] = [];
   filteredSchedules: Schedule[] = [];
+  sites: Site[] = [];
 
   // Filters
   searchTerm = '';
   statusFilter: 'all' | 'published' | 'draft' = 'all';
   siteFilter = 'all';
   monthFilter = 'all';
-  yearFilter   = new Date().getFullYear(); 
+  yearFilter   = new Date().getFullYear();
 
-  sites: { id: number; name: string }[] = [];
-  
+  // sites: { id: number; name: string }[] = [];
 
-  constructor(private scheduleService: ScheduleService, private companySrv : CompanyService) {}
+
+  constructor(private scheduleService: ScheduleService,
+    private companySrv : CompanyService,
+     private modalService: NgbModal,
+    private siteService: SiteService
+  ) {}
 
   ngOnInit(): void {
     this.loadSites();
-    this.fetchSchedules()
+    //this.fetchSchedules()
+    this.loadSchedules()
   }
 
-  private loadSites() {
-    this.companySrv.getMyCompany().subscribe(c => this.sites = c.sites ?? []);
+  loadSites(): void {
+    this.siteService.getSites().subscribe({
+      next: (sites) => {
+        this.sites = sites;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des sites:', error);
+      }
+    });
+  }
+
+
+  private loadSchedules(): void {
+    this.loading = true;
+    this.scheduleService.list().subscribe({
+      next: data => { this.schedules = data; this.applyFilters(); this.loading = false; },
+      error: err  => { console.error(err);   this.loading = false; }
+    });
+  }
+
+  openGenerationModal(): void {
+    const modalRef = this.modalService.open(ScheduleGerationModalComponent, {
+      size: 'lg',
+      backdrop: 'static'
+    });
+
+    modalRef.componentInstance.sites = this.sites;
+
+    modalRef.result.then((result) => {
+      if (result) {
+        this.generateSchedule(result);
+      }
+    }).catch(() => {
+      // Modal fermée sans action
+    });
   }
 
     /** Appel à l’API avec les filtres courants */
@@ -117,6 +160,22 @@ applyFilters(): void {
     const site = this.sites.find(s => s.id === siteId);
     return site ? site.name : 'Unknown Site';
   }
+
+
+
+  generateSchedule(params: { siteId: number, month: number, year: number }): void {
+    this.scheduleService.generateSchedule(params.siteId, params.month, params.year).subscribe({
+      next: (schedule) => {
+        console.log('Planning généré avec succès:', schedule);
+        this.loadSchedules(); // Recharger la liste
+      },
+      error: (error) => {
+        console.error('Erreur lors de la génération:', error);
+      }
+    });
+  }
+
+
 
 
 }

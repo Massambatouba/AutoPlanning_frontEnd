@@ -1,0 +1,194 @@
+.hour-requirements-container {
+      padding: var(--space-4);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--neutral-200);
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-8);
+      color: var(--neutral-600);
+    }
+
+    .requirements-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+
+    .requirement-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.15);
+      }
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4) var(--space-6);
+      background: var(--primary-50);
+      border-bottom: 1px solid var(--primary-100);
+
+      h3 {
+        margin: 0;
+        color: var(--primary-800);
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+    }
+
+    .card-content {
+      padding: var(--space-6);
+    }
+
+    .requirement-info {
+      margin-bottom: var(--space-4);
+    }
+
+    .hours-display {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+
+      .hours-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-600);
+      }
+
+      .hours-unit {
+        font-size: 1rem;
+        color: var(--neutral-600);
+      }
+    }
+
+    .description {
+      color: var(--neutral-700);
+      margin: 0;
+      font-style: italic;
+    }
+
+    .edit-form {
+      border-top: 1px solid var(--neutral-200);
+      padding-top: var(--space-4);
+      margin-top: var(--space-4);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-4);
+
+      label {
+        display: block;
+        margin-bottom: var(--space-2);
+        font-weight: 500;
+        color: var(--neutral-700);
+      }
+
+      .form-control {
+        width: 100%;
+        padding: var(--space-3);
+        border: 1px solid var(--neutral-300);
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--primary-500);
+          box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        &:disabled {
+          background-color: var(--neutral-100);
+          color: var(--neutral-500);
+        }
+      }
+
+      .help-text {
+        display: block;
+        margin-top: var(--space-1);
+        font-size: 0.875rem;
+        color: var(--neutral-600);
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .info-panel {
+      background: var(--neutral-50);
+      border-radius: 12px;
+      padding: var(--space-6);
+      border-left: 4px solid var(--primary-500);
+
+      h3 {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-4);
+        color: var(--neutral-800);
+
+        i {
+          color: var(--primary-600);
+        }
+      }
+
+      ul {
+        margin: 0;
+        padding-left: var(--space-4);
+
+        li {
+          margin-bottom: var(--space-2);
+          color: var(--neutral-700);
+
+          strong {
+            color: var(--neutral-900);
+          }
+        }
+      }
+    }
+
+    .spinner-sm {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
