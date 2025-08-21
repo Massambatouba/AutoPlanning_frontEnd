@@ -1,0 +1,220 @@
+<div class="company-detail">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+      <button class="btn btn-outline-secondary me-3" routerLink="/platform-admin/companies">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+      <div>
+        <h1 class="h2 mb-1" *ngIf="company">{{ company.name }}</h1>
+        <p class="text-muted mb-0">Détails de l'entreprise</p>
+      </div>
+    </div>
+    <div class="d-flex gap-2" *ngIf="company">
+      <button class="btn btn-outline-warning" (click)="toggleActive()">
+        <i class="bi" [class.bi-pause-circle]="company?.isActive" [class.bi-play-circle]="!company?.isActive"></i>
+        {{ company?.isActive ? 'Suspendre' : 'Réactiver' }}
+      </button>
+      <button class="btn btn-outline-success" (click)="loginAsCompany()">
+        <i class="bi bi-box-arrow-in-right me-2"></i>
+        Se connecter en tant que
+      </button>
+    </div>
+  </div>
+
+  <!-- States -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
+  <div *ngIf="!loading && errorMsg" class="alert alert-danger">{{ errorMsg }}</div>
+
+  <div *ngIf="company && !loading" class="row g-4">
+    <!-- Informations principales -->
+    <div class="col-xl-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0">
+          <h5 class="card-title mb-0">Informations Générales</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label class="form-label text-muted">Nom de l'entreprise</label>
+              <p class="fw-bold mb-0">{{ company.name }}</p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-muted">Email</label>
+              <p class="mb-0">{{ company.email }}</p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-muted">Date de création</label>
+              <p class="mb-0">{{ company.createdAt | date:'dd/MM/yyyy' }}</p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-muted">Dernière connexion</label>
+              <p class="mb-0">
+                {{ company.lastLoginAt ? (company.lastLoginAt | date:'dd/MM/yyyy HH:mm') : 'Jamais' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistiques d'utilisation -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0">
+          <h5 class="card-title mb-0">Utilisation</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-4">
+              <div class="text-center">
+                <div class="bg-primary bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 50px; height: 50px;">
+                  <i class="bi bi-people text-white fs-5"></i>
+                </div>
+                <h5 class="fw-bold">{{ company?.employeesCount || 0 }}</h5>
+                <p class="text-muted mb-0">Employés</p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="text-center">
+                <div class="bg-success bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 50px; height: 50px;">
+                  <i class="bi bi-building text-white fs-5"></i>
+                </div>
+                <h5 class="fw-bold">{{ company?.sitesCount || 0 }}</h5>
+                <p class="text-muted mb-0">Sites</p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="text-center">
+                <div class="bg-info bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 50px; height: 50px;">
+                  <i class="bi bi-calendar-event text-white fs-5"></i>
+                </div>
+                <h5 class="fw-bold">12</h5>
+                <p class="text-muted mb-0">Plannings ce mois</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historique des paiements (placeholder) -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+          <h5 class="card-title mb-0">Historique des Paiements</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Plan</th>
+                  <th>Montant</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>01/01/2025</td>
+                  <td>{{ company.subscriptionPlan }}</td>
+                  <td>{{ company.monthlyRevenue | currency:'EUR':'symbol':'1.0-0' }}</td>
+                  <td><span class="badge bg-success">Payé</span></td>
+                  <td><button class="btn btn-outline-primary btn-sm"><i class="bi bi-download"></i></button></td>
+                </tr>
+                <tr>
+                  <td>01/12/2024</td>
+                  <td>{{ company.subscriptionPlan }}</td>
+                  <td>{{ company.monthlyRevenue | currency:'EUR':'symbol':'1.0-0' }}</td>
+                  <td><span class="badge bg-success">Payé</span></td>
+                  <td><button class="btn btn-outline-primary btn-sm"><i class="bi bi-download"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-xl-4">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0">
+          <h5 class="card-title mb-0">Abonnement</h5>
+        </div>
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <span class="badge fs-6 px-3 py-2" [ngClass]="{
+              'bg-success': company.subscriptionStatus === 'ACTIVE',
+              'bg-warning': company.subscriptionStatus === 'TRIAL',
+              'bg-danger': company.subscriptionStatus === 'EXPIRED',
+              'bg-secondary': company.subscriptionStatus === 'INACTIVE'
+            }">
+              {{ getStatusLabel(company.subscriptionStatus) }}
+            </span>
+          </div>
+
+          <!-- Plan -->
+          <div class="mb-3">
+            <label class="form-label">Plan actuel</label>
+
+            <p class="mb-2 fw-semibold">{{ currentPlanName() }}</p>
+
+            <select class="form-select"
+                    [(ngModel)]="selectedPlanId"
+                    (ngModelChange)="onPlanChange($event)">
+              <option [ngValue]="null" disabled>— Sélectionner —</option>
+
+              <!-- id en number via [ngValue] -->
+              <option *ngFor="let p of plans" [ngValue]="p.id">
+                {{ p.name }}
+              </option>
+            </select>
+
+          </div>
+
+
+          <!-- Statut -->
+          <div class="mb-3">
+            <label class="form-label">Statut</label>
+            <select class="form-select"
+                    [(ngModel)]="selectedStatus"
+                    (ngModelChange)="onStatusChange($event)">
+              <option value="ACTIVE">Actif</option>
+              <option value="TRIAL">Période d'essai</option>
+              <option value="EXPIRED">Expiré</option>
+              <option value="INACTIVE">Inactif</option>
+            </select>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-danger" (click)="deleteCompany()">
+              <i class="bi bi-trash me-2"></i> Supprimer l'entreprise
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+          <h5 class="card-title mb-0">Actions Administratives</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-info" (click)="viewLogs()">
+              <i class="bi bi-journal-text me-2"></i> Voir les logs
+            </button>
+            <button class="btn btn-outline-warning" (click)="resetPassword()">
+              <i class="bi bi-key me-2"></i> Réinitialiser mot de passe
+            </button>
+            <button class="btn btn-outline-secondary" (click)="exportData()">
+              <i class="bi bi-download me-2"></i> Exporter les données
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

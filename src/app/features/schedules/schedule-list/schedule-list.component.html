@@ -2,7 +2,8 @@
        <header class="page-header">
          <h1>Plannings</h1>
          <div class="header-actions">
-+          <button class="btn btn-success me-2" (click)="openGenerationModal()">
++          <button class="btn btn-success me-2"
+             (click)="openGenerationModal()" *ngIf="canCreateOrGenerate">
 +            <i class="bi bi-magic"></i>
 +            Générer Planning
 +          </button>
@@ -11,8 +12,8 @@
 +            <i class="bi bi-funnel"></i>
              Filtrer
            </button>
-           <button class="btn btn-primary" routerLink="/schedules/create">
--            <i class="material-icons">add</i>
+           <button class="btn btn-primary" routerLink="/schedules/create" *ngIf="canCreateOrGenerate">
+<!-- -            <i class="material-icons">add</i> -->
 +            <i class="bi bi-plus-lg"></i>
              Créer Planning
            </button>
@@ -117,24 +118,29 @@
         <div class="card-footer d-flex justify-content-between align-items-center">
           <small>Updated: {{ schedule.updatedAt | date:'MMM d, y' }}</small>
           <div>
-            <i
-              [ngClass]="schedule.isSent ? 'bi bi-envelope-fill text-success' : 'bi bi-envelope text-secondary'">
-            </i>
-            <span>{{ schedule.isSent ? 'Sent' : 'Not sent' }}</span>
-          </div>
+              <span class="badge" [ngClass]="isPublished(schedule) ? 'bg-success' : 'bg-warning'">
+                {{ isPublished(schedule) ? 'Published' : 'Draft' }}
+              </span>
+
+            <i [ngClass]="isSent(schedule) ? 'bi bi-envelope-fill text-success' : 'bi bi-envelope text-secondary'"></i>
+              <span>{{ isSent(schedule) ? 'Sent' : 'Not sent' }}</span>
+            </div>
         </div>
 
         <div class="card-footer d-flex justify-content-between">
           <a [routerLink]="['/schedules', schedule.id]" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-eye"></i> View
           </a>
-          <a [routerLink]="['/schedules', schedule.id, 'edit']" class="btn btn-outline-secondary btn-sm">
+          <a [routerLink]="['/schedules', schedule.id, 'edit']"
+            class="btn btn-outline-secondary btn-sm"
+            [class.disabled]="!canEditFromList(schedule)"
+            [attr.aria-disabled]="!canEditFromList(schedule)"
+            [style.pointer-events]="!canEditFromList(schedule) ? 'none' : null">
             <i class="bi bi-pencil"></i> Edit
           </a>
-          <button
-            class="btn btn-outline-primary btn-sm"
-            *ngIf="!schedule.isSent && schedule.isPublished"
-            (click)="sendSchedule(schedule.id)">
+          <button class="btn btn-outline-primary btn-sm"
+                  *ngIf="canSend(schedule)"
+                  (click)="sendSchedule(schedule.id)">
             <i class="bi bi-send"></i>
           </button>
         </div>

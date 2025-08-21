@@ -1,0 +1,53 @@
+<div class="container py-4" *ngIf="!loading && user">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 m-0">Admin – {{ user.firstName }} {{ user.lastName }}</h1>
+    <a class="btn btn-outline-primary" [routerLink]="['/admins', user.id, 'edit']">
+      Modifier
+    </a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="text-muted">Email</div>
+          <div class="fw-semibold">{{ user.email }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted">Rôles</div>
+          <div class="fw-semibold">{{ user.roles.join(', ') }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted">Statut</div>
+          <span class="badge bg-success" *ngIf="user.active">Actif</span>
+          <span class="badge bg-secondary" *ngIf="!user.active">Inactif</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header fw-semibold">Portée d’accès</div>
+    <div class="card-body">
+      <ng-container *ngIf="user.manageAllSites; else partial">
+        <span class="badge bg-primary">Tous les sites</span>
+      </ng-container>
+      <ng-template #partial>
+        <div *ngIf="managedSiteNames.length > 0; else none">
+          <div class="mb-2">Sites autorisés :</div>
+          <ul class="mb-0">
+            <li *ngFor="let n of managedSiteNames">{{ n }}</li>
+          </ul>
+        </div>
+        <ng-template #none>
+          <span class="text-muted">Aucun site associé</span>
+        </ng-template>
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+<div class="container py-5 text-center" *ngIf="loading">
+  <div class="spinner-border" role="status"></div>
+</div>
+

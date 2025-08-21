@@ -1,0 +1,91 @@
+<div class="container-xxl py-4">
+  <h2 class="h4 mb-3">Créer un admin‑site</h2>
+
+  <form class="card" [formGroup]="form" (ngSubmit)="submit()" [class.was-validated]="submitted" novalidate>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <!-- Prénom -->
+        <div class="col-md-6">
+          <label for="firstName" class="form-label">Prénom</label>
+          <input id="firstName" type="text" class="form-control"
+                 formControlName="firstName" required>
+          <div class="invalid-feedback" *ngIf="f.firstName.touched && f.firstName.invalid">Requis.</div>
+        </div>
+
+        <!-- Nom -->
+        <div class="col-md-6">
+          <label for="lastName" class="form-label">Nom</label>
+          <input id="lastName" type="text" class="form-control"
+                 formControlName="lastName" required>
+          <div class="invalid-feedback" *ngIf="f.lastName.touched && f.lastName.invalid">Requis.</div>
+        </div>
+
+        <!-- Email -->
+        <div class="col-md-6">
+          <label for="email" class="form-label">Email</label>
+          <input id="email" type="email" inputmode="email" class="form-control"
+                 formControlName="email" required>
+          <div class="invalid-feedback" *ngIf="f.email.touched && f.email.invalid">Email invalide.</div>
+        </div>
+
+        <!-- Mot de passe temporaire -->
+        <div class="col-md-6">
+          <label for="tempPassword" class="form-label">Mot de passe temporaire</label>
+          <input id="tempPassword" type="text" class="form-control"
+                 formControlName="tempPassword" required>
+          <div class="invalid-feedback" *ngIf="f.tempPassword.touched && f.tempPassword.invalid">
+            6 caractères minimum.
+          </div>
+        </div>
+
+        <!-- Accès tous les sites -->
+        <div class="col-12">
+          <div class="form-check">
+            <input id="allSites" type="checkbox" class="form-check-input"
+                   formControlName="allSites">
+            <label for="allSites" class="form-check-label">Accès à tous les sites</label>
+          </div>
+        </div>
+
+        <!-- Sélection des sites -->
+        <div class="col-12" *ngIf="!form.get('allSites')?.value">
+          <label for="siteIds" class="form-label">Sites</label>
+          <select id="siteIds" class="form-select" multiple
+                  formControlName="siteIds" required aria-describedby="sitesHelp">
+            <option *ngFor="let s of sitesList" [ngValue]="s.id">{{ s.name }}</option>
+          </select>
+          <div id="sitesHelp" class="form-text">
+            Maintenez CTRL/⌘ pour une sélection multiple.
+          </div>
+          <div class="invalid-feedback" *ngIf="f.siteIds.touched && f.siteIds.invalid">
+            Sélectionnez au moins un site.
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-primary" type="submit" [disabled]="loading">
+          <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+          Enregistrer
+        </button>
+        <a class="btn btn-outline-secondary" routerLink="/admin/admins">Annuler</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- Résumé après création -->
+  <div *ngIf="created" class="alert alert-success mt-3" role="alert">
+    <strong>Créé :</strong>
+    {{ created.firstName }} {{ created.lastName }} · {{ created.email }} —
+    <ng-container *ngIf="created.manageAllSites; else partial">
+      Accès global à tous les sites.
+    </ng-container>
+    <ng-template #partial>
+      Sites :
+      <span class="badge bg-secondary me-1" *ngFor="let id of (created.siteIds ?? [])">#{{ id }}</span>
+    </ng-template>
+  </div>
+</div>
+

@@ -22,8 +22,12 @@ import {
   Users,
   Settings,
   CreditCard,
-  BarChart2
+  BarChart2,
+  CalendarDays,
+  Building2,
+  Clock
 } from 'lucide-angular';
+import { ToastrModule } from 'ngx-toastr';
 
 function initAuth(auth: AuthService) {
   return () => auth.initializeAuth();
@@ -34,15 +38,20 @@ bootstrapApplication(AppComponent, {
     provideRouter(APP_ROUTES),
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimations(),
-    
+
     importProvidersFrom(
+      ToastrModule.forRoot({
+        positionClass: 'toast-bottom-right',
+        timeOut      : 4000,
+        closeButton  : true,
+      }),
       LucideAngularModule.pick({
         Menu,
         Bell,
         User,
         LogOut,
 
-        Calendar,
+        CalendarDays,
         Shield,
         ShieldCheck,
 
@@ -51,7 +60,9 @@ bootstrapApplication(AppComponent, {
         Users,             // deviens "users"
         Settings,          // "settings"
         CreditCard,        // "credit-card"
-        BarChart2          // "bar-chart-2"
+        BarChart2,          // "bar-chart-2"
+        Building2,
+        Clock
       })
     ),
     {

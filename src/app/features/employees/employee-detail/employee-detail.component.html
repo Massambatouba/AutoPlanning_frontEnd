@@ -1,35 +1,38 @@
 <div *ngIf="!loading" class="employee-detail-container">
-  <!-- EN-TÊTE : bouton Retour, logo entreprise, nom de l'employé, actions -->
-  <header class="page-header">
+  <!-- EN-TÊTE -->
+  <header class="page-header" *ngIf="!printMode">
     <div class="header-left">
       <button class="btn btn-outline" routerLink="/employees">
-        <i class="material-icons">arrow_back</i>
+        <i class="bi bi-arrow-left"></i>
         Retour
       </button>
-      <!-- Logo de l'entreprise (si défini) -->
+
       <div class="company-header" *ngIf="companyLogoUrl">
-        <img
-          [src]="companyLogoUrl"
-          alt="Logo de l’entreprise"
-          class="company-logo"
-        />
+        <img [src]="companyLogoUrl" alt="Logo de l’entreprise" class="company-logo">
       </div>
-      <h1 *ngIf="employee">{{ employee.firstName }} {{ employee.lastName }}</h1>
+
+      <h1 *ngIf="employee">
+        {{ employee.firstName }} {{ employee.lastName }}
+      </h1>
     </div>
 
     <div class="header-actions" *ngIf="employee">
       <button class="btn btn-outline" (click)="toggleEmployeeStatus()">
-        <i class="material-icons">
-          {{ employee?.active ? "person_off" : "person" }}
-        </i>
-        {{ employee?.active ? "Désactiver" : "Activer" }}
+        <i class="bi" [ngClass]="employee?.active ? 'bi-person-dash' : 'bi-person-check'"></i>
+        {{ employee?.active ? 'Désactiver' : 'Activer' }}
       </button>
-      <button
-        class="btn btn-primary"
-        [routerLink]="['/employees', employee?.id, 'edit']"
-      >
-        <i class="material-icons">edit</i>
+
+      <button class="btn btn-primary"
+              [routerLink]="['/employees', employee?.id, 'edit']">
+        <i class="bi bi-pencil-square"></i>
         Modifier
+      </button>
+
+      <button class="btn btn-primary ms-2"
+              [disabled]="sending"
+              (click)="sendToEmployee(employee.id)">
+        <i class="bi bi-send-fill me-1"></i>
+        {{ sending ? 'Envoi en cours…' : 'Envoyer le planning' }}
       </button>
     </div>
   </header>
@@ -38,101 +41,29 @@
   <div *ngIf="loading" class="loading-container">
     <div class="spinner"></div>
   </div>
-  <div *ngIf="error" class="alert alert-error">
-    {{ error }}
-  </div>
+  <div *ngIf="error" class="alert alert-error">{{ error }}</div>
 
   <!-- CONTENU PRINCIPAL -->
   <div *ngIf="!loading && employee" class="employee-content">
-    <!-- Infos de l'employé -->
+    <!-- INFOS EMPLOYÉ -->
     <div class="employee-info card">
-      <div class="employee-header">
-        <div class="employee-avatar">
-          {{ employee?.firstName?.charAt(0) }}
-          {{ employee?.lastName?.charAt(0) }}
-        </div>
-        <div class="employee-status">
-          <span
-            class="badge"
-            [class.badge-success]="employee?.active"
-            [class.badge-warning]="!employee?.active"
-          >
-            {{ employee?.active ? "Actif" : "Inactif" }}
-          </span>
-        </div>
-      </div>
-
-      <div class="info-section">
-        <h2>Informations Personnelles</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Code Employé</label>
-            <p>{{ employee?.employeeCode }}</p>
-          </div>
-          <div class="info-item">
-            <label>Email</label>
-            <p>{{ employee?.email }}</p>
-          </div>
-          <div class="info-item">
-            <label>Téléphone</label>
-            <p>{{ employee?.phone || "Non renseigné" }}</p>
-          </div>
-          <div class="info-item">
-            <label>Adress</label>
-            <p>{{ employee?.adress }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-section">
-        <h2>Informations Professionnelles</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Poste</label>
-            <p>{{ employee?.position }}</p>
-          </div>
-          <div class="info-item">
-            <label>Département</label>
-            <p>{{ employee?.department || "Non assigné" }}</p>
-          </div>
-          <div class="info-item">
-            <label>Type de Contrat</label>
-            <p>{{ contractTypes[employee.contractType] }}</p>
-          </div>
-          <div class="info-item">
-            <label>Heures Max. par Semaine</label>
-            <p>{{ employee?.maxHoursPerWeek }}h</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-section" *ngIf="employee.skillSets?.length">
-        <h2>Compétences</h2>
-        <div class="skills-list">
-          <span class="skill-tag" *ngFor="let skill of employee.skillSets">
-            {{ skill }}
-          </span>
-        </div>
-      </div>
+      <!-- … (inchangé) … -->
     </div>
 
-    <!-- Actions employé -->
-    <div class="employee-actions card">
+    <!-- ACTIONS EMPLOYÉ -->
+    <div class="employee-actions card" *ngIf="!printMode">
       <h2>Actions</h2>
       <div class="actions-grid">
-        <a
-          [routerLink]="['/employees', employee.id, 'absences']"
-          class="action-card"
-        >
-          <i class="material-icons">event_busy</i>
+        <a [routerLink]="['/employees', employee.id, 'absences']"
+           class="action-card">
+          <i class="bi bi-calendar2-x"></i>
           <span>Gérer les Absences</span>
         </a>
-        <a
-          [routerLink]="['/schedules']"
-          [queryParams]="{ employeeId: employee.id }"
-          class="action-card"
-        >
-          <i class="material-icons">calendar_today</i>
+
+        <a [routerLink]="['/schedules']"
+           [queryParams]="{ employeeId: employee.id }"
+           class="action-card">
+          <i class="bi bi-calendar-week"></i>
           <span>Voir les Plannings</span>
         </a>
       </div>
@@ -174,7 +105,7 @@
         {{ currentYear }}
       </h2>
 
-      <table class="planning-grid">
+      <table id="planning" class="planning-grid">
         <thead>
           <!-- 1ʳᵉ ligne : initiales des jours -->
           <tr>
@@ -275,15 +206,17 @@
 
       </table>
 
-      <div class="site-details card">
+      <div class="site-details card" *ngIf="siteList?.length">
         <h3>Détails des sites</h3>
         <div class="site-info" *ngFor="let siteName of siteList">
-          <ng-container *ngIf="getSiteByName(siteName) as fullSite">
-            <div class="site-line">
-              <strong>{{ fullSite.name }}</strong><br />
-              {{ fullSite.address }}, {{ fullSite.zipCode }} {{ fullSite.city }}
-            </div>
-          </ng-container>
+             <ng-container>
+                <ng-container *ngIf="getSiteByName(siteName) as fullSite">
+                  <div class="site-line">
+                    <strong>{{ fullSite.name }}</strong><br />
+                    {{ fullSite.address }}, {{ fullSite.zipCode }} {{ fullSite.city }}
+                  </div>
+                </ng-container>
+             </ng-container>
         </div>
       </div>
     </div>

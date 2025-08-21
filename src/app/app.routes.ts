@@ -2,28 +2,37 @@
 
 import { Routes } from '@angular/router';
 import { authGuard }  from './guards/auth.guard';
-import { adminGuard } from './guards/admin.guard';
+import { roleGuard } from './guards/role.guard';
 
 export const APP_ROUTES: Routes = [
-      {
+    {
       path: '',
       redirectTo: 'dashboard',
       pathMatch: 'full'
     },
-    /* page de connexion – composant stand-alone */
+
     { path: 'login',
       loadComponent: () =>
         import('./features/auth/login/login.component')
           .then(m => m.LoginComponent)
     },
 
-    /* administration – routes stand-alone */
+    {
+      path: 'platform-admin',
+      loadChildren: () =>
+        import('./features/platform-admin/platform-admin.routes')
+          .then(m => m.PLATFORM_ADMIN_ROUTES),
+      canActivate: [authGuard],
+    },
+
     {
       path: 'admin',
       loadChildren: () =>
         import('./features/admin/admin-routing.model')
           .then(m => m.ADMIN_ROUTES),
-      canActivate: [authGuard, adminGuard]
+      canActivate: [
+        authGuard,
+        roleGuard(['SUPER_ADMIN', 'ADMIN'])]
     },
 
     { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -77,6 +86,13 @@ export const APP_ROUTES: Routes = [
            .then(m => m.SUBSCRIPTION_ROUTES),
        canActivate: [authGuard]
      },
+
+      {                     // ⬅ NOUVELLE ENTRÉE
+        path: 'public-print/:id',
+        loadComponent: () => import('./features/employees/employee-detail/employee-detail.component')
+                              .then(m => m.EmployeeDetailComponent),
+        data: { printMode: true }   // pas de guard
+      },
 
     /* 404 stand-alone */
      {

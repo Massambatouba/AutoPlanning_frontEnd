@@ -20,7 +20,13 @@ export interface Schedule {
   createdAt: string | Date | undefined;
   updatedAt: Date;
   status: ScheduleStatus;
-
+  canEdit?: boolean;
+    permissions?: {
+    edit: boolean;
+    generate: boolean;
+    publish: boolean;
+    send: boolean;
+  }
 }
 export interface AgentTypeConfig {
   color: string;
@@ -87,6 +93,13 @@ export interface ContractHourRequirementRequest {
   description?: string;
 }
 
+export interface DashboardStats {
+  schedulesCount: number;
+  employeesCount: number;
+  sitesCount: number;
+  completionRate: number;
+}
+
 export interface ScheduleComplianceResponse {
   scheduleId: number;
   scheduleName: string;
@@ -132,3 +145,40 @@ export interface WeeklyScheduleRule {
   maxEmployees: number;
   agents: AgentSchedule[];              
 }
+
+export interface ScheduleResponse {
+  id: number;
+  name: string;
+  month: number;
+  year: number;
+  published: boolean;
+  validated: boolean;
+  sent: boolean;
+  sentAt?: string | null;
+  completionRate: number;
+  createdAt: string;
+  updatedAt: string;
+
+  site: {
+    id: number;
+    name: string;
+    city?: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+  };
+  company: {
+    id: number;
+    name: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
+
+  // Clé pour l’UX : permet d'activer/désactiver les actions
+  canEdit: boolean;
+
+  // Optionnel selon endpoint (liste: souvent absent)
+  assignments?: any[];
+}
+

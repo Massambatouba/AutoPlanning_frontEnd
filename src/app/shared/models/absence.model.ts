@@ -17,3 +17,15 @@ export interface Absence {
   reason: string;
   comment?: string;
 }
+
+export interface SendResult {
+  employeeId: number;
+  success: boolean;
+  error?: string;
+}
+
+export interface SendReport {
+  results: SendResult[];
+  successCount: number;
+  failureCount: number;
+}

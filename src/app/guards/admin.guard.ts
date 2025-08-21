@@ -1,22 +1,25 @@
-import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { map, take } from 'rxjs/operators';
+// src/app/guards/admin.guard.ts
+import { Injectable } from '@angular/core';
+import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-export const adminGuard: CanActivateFn = (route, state) => {
-  const router = inject(Router);
-  const authService = inject(AuthService);
+@Injectable({ providedIn: 'root' })
+export class RoleGuard implements CanActivate {
+  constructor(private auth: AuthService, private router: Router) {}
 
-  return authService.isAuthenticated$.pipe(
-    take(1),
-    map(isAuthenticated => {
-      if (isAuthenticated && authService.isAdmin()) {
-        return true;
-      }
-      
-      // If not admin, redirect to dashboard
-      router.navigate(['/dashboard']);
-      return false;
-    })
-  );
-};
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree {
+    const required: string[] = route.data['roles'] ?? [];
+    const userRoles: string[] = this.auth.getRoles() ?? [];
+
+    // DEBUG (temporaire)
+    console.log('[RoleGuard] url=', state.url, 'required=', required, 'userRoles=', userRoles);
+
+    if (!required.length) return true;
+
+    const ok = required.some(r => userRoles.includes(r));
+    if (ok) return true;
+
+    // Si pas autorisé, redirige proprement (pas vers 404)
+    return this.router.parseUrl('/dashboard');
+  }
+}

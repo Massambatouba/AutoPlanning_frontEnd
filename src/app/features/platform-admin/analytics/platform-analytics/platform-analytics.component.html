@@ -1,0 +1,206 @@
+<div class="platform-analytics">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h2 mb-1">Analytics Plateforme</h1>
+          <p class="text-muted mb-0">Analyse des performances et tendances</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary">
+            <i class="bi bi-download me-2"></i>
+            Exporter Rapport
+          </button>
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <i class="bi bi-calendar-range me-2"></i>
+              Période
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">7 derniers jours</a></li>
+              <li><a class="dropdown-item" href="#">30 derniers jours</a></li>
+              <li><a class="dropdown-item" href="#">3 derniers mois</a></li>
+              <li><a class="dropdown-item" href="#">12 derniers mois</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs principaux -->
+      <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <div class="bg-success bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                <i class="bi bi-arrow-up-circle text-white fs-3"></i>
+              </div>
+              <h4 class="fw-bold text-success">+12.5%</h4>
+              <p class="text-muted mb-0">Croissance MRR</p>
+              <small class="text-muted">vs mois précédent</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <div class="bg-primary bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                <i class="bi bi-person-plus text-white fs-3"></i>
+              </div>
+              <h4 class="fw-bold text-primary">8</h4>
+              <p class="text-muted mb-0">Nouvelles entreprises</p>
+              <small class="text-muted">ce mois</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <div class="bg-warning bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                <i class="bi bi-percent text-white fs-3"></i>
+              </div>
+              <h4 class="fw-bold text-warning">2.1%</h4>
+              <p class="text-muted mb-0">Taux de churn</p>
+              <small class="text-muted">mensuel</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <div class="bg-info bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                <i class="bi bi-currency-euro text-white fs-3"></i>
+              </div>
+              <h4 class="fw-bold text-info">€127</h4>
+              <p class="text-muted mb-0">ARPU</p>
+              <small class="text-muted">Revenu moyen par utilisateur</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graphiques -->
+      <div class="row g-4 mb-5">
+        <div class="col-xl-8">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+              <h5 class="card-title mb-0">Évolution des Revenus et Entreprises</h5>
+            </div>
+            <div class="card-body">
+              <div class="revenue-analytics" *ngIf="revenueData">
+                <div class="d-flex justify-content-between mb-3">
+                  <div class="d-flex align-items-center">
+                    <div class="bg-primary rounded me-2" style="width: 12px; height: 12px;"></div>
+                    <small class="text-muted">Revenus (€)</small>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <div class="bg-success rounded me-2" style="width: 12px; height: 12px;"></div>
+                    <small class="text-muted">Nouvelles entreprises</small>
+                  </div>
+                </div>
+
+                <div class="chart-container" style="height: 300px; position: relative;">
+                  <div class="d-flex align-items-end justify-content-between h-100 px-3">
+                    <div *ngFor="let data of revenueData" class="chart-column d-flex flex-column align-items-center">
+                      <div class="d-flex align-items-end mb-2" style="height: 250px;">
+                    <div class="bg-primary rounded-top me-1"
+                        [style.height.px]="barHeight(data.revenue ?? 0)"
+                        [style.width.px]="20"
+                        [title]="'Revenus: ' + (data.revenue ?? 0) + '€'">
+                    </div>
+
+                    <div class="bg-success rounded-top"
+                        [style.height.px]="barHeight((data.newCompanies ?? 0), maxNewCompanies)"
+                        [style.width.px]="20"
+                        [title]="'Nouvelles: ' + (data.newCompanies ?? 0)">
+                    </div>
+
+
+                      </div>
+                      <small class="text-muted">{{ data.month }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+              <h5 class="card-title mb-0">Répartition des Plans</h5>
+            </div>
+            <div class="card-body">
+              <div class="plan-distribution">
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Starter</span>
+                    <span class="fw-bold">45%</span>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-info" style="width: 45%"></div>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Pro</span>
+                    <span class="fw-bold">40%</span>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-primary" style="width: 40%"></div>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Enterprise</span>
+                    <span class="fw-bold">15%</span>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-dark" style="width: 15%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métriques détaillées -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+          <h5 class="card-title mb-0">Métriques Détaillées</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-3">
+              <div class="border rounded-3 p-3 text-center">
+                <h5 class="text-primary fw-bold">€15,420</h5>
+                <p class="text-muted mb-0">MRR Total</p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="border rounded-3 p-3 text-center">
+                <h5 class="text-success fw-bold">€2,340</h5>
+                <p class="text-muted mb-0">Nouveau MRR</p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="border rounded-3 p-3 text-center">
+                <h5 class="text-warning fw-bold">€320</h5>
+                <p class="text-muted mb-0">MRR Perdu</p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="border rounded-3 p-3 text-center">
+                <h5 class="text-info fw-bold">€127</h5>
+                <p class="text-muted mb-0">ARPU</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

@@ -1,22 +1,42 @@
-<div class="dashboard-container">
-  <header class="dashboard-header">
-    <h1>Tableau de Bord</h1>
-    <div class="dashboard-actions">
-      <button class="btn btn-primary" routerLink="/schedules/create">
-        <i class="material-icons">add</i>
-        Créer un Planning
-      </button>
+<div class="container-xxl py-4">
+  <!-- En-tête -->
+  <header class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h1 class="h3 m-0">Tableau de Bord</h1>
+
+    <div class="d-flex gap-2">
+      <!-- Lien d'action principal -->
+      <a class="btn btn-primary d-inline-flex align-items-center"
+         routerLink="/schedules/create">
+        <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
+        <span>Créer un Planning</span>
+      </a>
+
+      <!-- Lien visible selon le rôle -->
+      <a *ngIf="auth.hasAnyRole('SUPER_ADMIN','ADMIN')"
+         class="btn btn-outline-secondary d-inline-flex align-items-center"
+         routerLink="/admin/admins/new">
+        <i class="bi bi-person-plus me-1" aria-hidden="true"></i>
+        <span>Créer un admin‑site</span>
+      </a>
     </div>
   </header>
-  
-  <app-dashboard-stats [stats]="stats"></app-dashboard-stats>
-  
-  <div class="dashboard-sections">
-    <app-recent-schedules 
-      [loading]="loading"
-      [schedules]="recentSchedules">
-    </app-recent-schedules>
-    
-    <app-dashboard-sidebar></app-dashboard-sidebar>
+
+  <!-- Stats -->
+  <div class="mb-4">
+    <app-dashboard-stats [stats]="stats"></app-dashboard-stats>
+  </div>
+
+  <!-- Sections -->
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <app-recent-schedules
+        [loading]="loading"
+        [schedules]="recentSchedules">
+      </app-recent-schedules>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <app-dashboard-sidebar></app-dashboard-sidebar>
+    </div>
   </div>
 </div>

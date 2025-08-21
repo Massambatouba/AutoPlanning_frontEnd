@@ -1,12 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
-import { adminGuard } from './guards/admin.guard';
+import { RoleGuard } from './guards/admin.guard';
 const routes: Routes = [
-    {
-    path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full'
-  },
+
   /* page de connexion – composant stand-alone */
   { path: 'login',
     loadComponent: () =>
@@ -14,16 +10,23 @@ const routes: Routes = [
         .then(m => m.LoginComponent)
   },
 
+  {
+      path: 'platform-admin',
+      loadChildren: () =>
+        import('./features/platform-admin/platform-admin.routes')
+          .then(m => m.PLATFORM_ADMIN_ROUTES),
+      canActivate: [authGuard, RoleGuard],
+      data: { roles: ['SUPER_ADMIN'] }
+  },
+
   /* administration – routes stand-alone */
   {
     path: 'admin',
     loadChildren: () =>
       import('./features/admin/admin-routing.model')
-        .then(m => m.routes),
-    canActivate: [authGuard, adminGuard]
+        .then(m => m.ADMIN_ROUTES),
+    canActivate: [authGuard]
   },
-
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
   { path: 'auth',
     loadChildren: () =>
@@ -40,7 +43,7 @@ const routes: Routes = [
 
   { path: 'company',
     loadChildren: () =>
-      import('./features/company/company-routing.model')
+      import('./features/company/company-routing.module')
         .then(m => m.COMPANY_ROUTES),
     canActivate: [authGuard]
   },
@@ -75,6 +78,12 @@ const routes: Routes = [
      canActivate: [authGuard]
    },
 
+    {
+      path: '',
+      redirectTo: 'dashboard',
+      pathMatch: 'full'
+    },
+  
   /* 404 stand-alone */
    {
      path: '**',

@@ -11,6 +11,9 @@ import { SiteService } from 'src/app/services/site.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CompanyRoutingModule } from '../../company/company-routing.module';
 import { ScheduleGerationModalComponent } from '../schedule-geration-modal/schedule-geration-modal.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   standalone: true,
@@ -32,6 +35,9 @@ export class ScheduleListComponent implements OnInit {
   filteredSchedules: Schedule[] = [];
   sites: Site[] = [];
 
+  managedSites: { id: number; name: string }[] = [];
+
+
   // Filters
   searchTerm = '';
   statusFilter: 'all' | 'published' | 'draft' = 'all';
@@ -45,13 +51,17 @@ export class ScheduleListComponent implements OnInit {
   constructor(private scheduleService: ScheduleService,
     private companySrv : CompanyService,
      private modalService: NgbModal,
+     private auth: AuthService,
+     private http: HttpClient,
     private siteService: SiteService
   ) {}
 
   ngOnInit(): void {
     this.loadSites();
     //this.fetchSchedules()
-    this.loadSchedules()
+    this.loadManagedSites();
+    this.loadSchedules();
+    this.loadSchedules();
   }
 
   loadSites(): void {
@@ -64,6 +74,37 @@ export class ScheduleListComponent implements OnInit {
       }
     });
   }
+
+  isPublished(s: any): boolean { return !!(s?.isPublished ?? s?.published); }
+  isSent(s: any): boolean      { return !!(s?.isSent      ?? s?.sent); }
+  
+  canEdit(s: any): boolean {
+  if (s?.permissions) return !!s.permissions.edit;
+  return !!s?.canEdit;
+}
+canSend(s: any): boolean {
+  if (s?.permissions) return !!s.permissions.send;
+  return this.canEdit(s) && this.isPublished(s) && !this.isSent(s);
+}
+canEditFromList(s: any): boolean {
+  if (s?.permissions) return !!s.permissions.edit;
+  return this.canEdit(s);
+}
+
+get canCreateOrGenerate(): boolean {
+  return this.managedSites.length > 0
+      || this.auth.hasAnyRole('SUPER_ADMIN','ADMIN','SITE_ADMIN','COMPANY_ADMIN'); // adapte à tes rôles
+}
+
+  private loadManagedSites(): void {
+  this.http.get<{id:number; name:string}[]>(
+    `${environment.apiUrl}/schedules/sites-managed`
+  ).subscribe({
+    next: sites => this.managedSites = sites,
+    error: err => console.error('Erreur sites-managed', err)
+  });
+  }
+
 
 
   private loadSchedules(): void {
@@ -174,8 +215,5 @@ applyFilters(): void {
       }
     });
   }
-
-
-
 
 }
