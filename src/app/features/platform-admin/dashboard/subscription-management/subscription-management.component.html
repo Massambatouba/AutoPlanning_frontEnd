@@ -1,0 +1,164 @@
+<div class="subscription-management">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h2 mb-1">Gestion des Abonnements</h1>
+          <p class="text-muted mb-0">Plans et revenus de la plateforme</p>
+        </div>
+        <button class="btn btn-primary" (click)="createPlan()">
+          <i class="bi bi-plus-lg me-2"></i>
+          Nouveau Plan
+        </button>
+      </div>
+
+      <!-- Etats -->
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Chargement...</span>
+        </div>
+      </div>
+      <div *ngIf="!loading && errorMsg" class="alert alert-danger">{{ errorMsg }}</div>
+
+      <ng-container *ngIf="!loading && !errorMsg">
+        <!-- Statistiques des abonnements -->
+        <div class="row g-4 mb-5">
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+              <div class="card-body">
+                <div class="bg-primary bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                  <i class="bi bi-currency-euro text-white fs-3"></i>
+                </div>
+                <h4 class="fw-bold">
+                  {{ (stats?.totalRevenue ?? computedMonthlyRevenue) | currency:'EUR':'symbol':'1.0-0' }}
+                </h4>
+                <p class="text-muted mb-0">Revenus mensuels</p>
+                <small *ngIf="stats">source: /platform-admin/stats</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+              <div class="card-body">
+                <div class="bg-success bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                  <i class="bi bi-check-circle text-white fs-3"></i>
+                </div>
+                <h4 class="fw-bold">{{ activeSubscriptions }}</h4>
+                <p class="text-muted mb-0">Abonnements actifs</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+              <div class="card-body">
+                <div class="bg-warning bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                  <i class="bi bi-clock text-white fs-3"></i>
+                </div>
+                <h4 class="fw-bold">{{ trialSubscriptions }}</h4>
+                <p class="text-muted mb-0">Périodes d'essai</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+              <div class="card-body">
+                <div class="bg-danger bg-gradient rounded-3 p-3 mx-auto mb-3" style="width: 60px; height: 60px;">
+                  <i class="bi bi-x-circle text-white fs-3"></i>
+                </div>
+                <h4 class="fw-bold">{{ expiredSubscriptions }}</h4>
+                <p class="text-muted mb-0">Abonnements expirés</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plans d'abonnement -->
+        <div class="card border-0 shadow-sm mb-5">
+          <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0">Plans d'Abonnement</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div *ngFor="let plan of subscriptionPlans; trackBy: trackPlan" class="col-lg-4">
+                <div class="card border h-100" [class.border-primary]="plan.isPopular">
+                  <div class="card-header text-center" [class.bg-primary]="plan.isPopular" [class.text-white]="plan.isPopular">
+                    <h5 class="card-title mb-1">{{ plan.name }}</h5>
+                    <div class="h2 mb-0">{{ plan.price }}€<small class="fs-6">/mois</small></div>
+                    <span *ngIf="plan.isPopular" class="badge bg-warning text-dark position-absolute top-0 start-50 translate-middle">
+                      Populaire
+                    </span>
+                  </div>
+                  <div class="card-body">
+                    <ul class="list-unstyled">
+                      <li class="mb-2">
+                        <i class="bi bi-people text-primary me-2"></i>
+                        {{ plan.maxEmployees === -1 ? 'Employés illimités' : plan.maxEmployees + ' employés max' }}
+                      </li>
+                      <li class="mb-2">
+                        <i class="bi bi-building text-primary me-2"></i>
+                        {{ plan.maxSites === -1 ? 'Sites illimités' : plan.maxSites + ' sites max' }}
+                      </li>
+                      <li *ngFor="let feature of plan.features" class="mb-2">
+                        <i class="bi bi-check text-success me-2"></i>
+                        {{ feature }}
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="card-footer bg-transparent">
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-outline-primary btn-sm flex-fill" (click)="editPlan(plan)">
+                        <i class="bi bi-pencil me-1"></i>
+                        Modifier
+                      </button>
+                      <button class="btn btn-outline-danger btn-sm" (click)="deletePlan(plan)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="subscriptionPlans.length === 0" class="text-center text-muted">
+                Aucun plan d’abonnement.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Répartition par Plan -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0">Répartition par Plan</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div *ngFor="let plan of subscriptionPlans; trackBy: trackPlan" class="col-md-4">
+                <div class="text-center">
+                  <div class="bg-light rounded-3 p-4 mb-3">
+                    <h3 class="text-primary mb-2">{{ getCompaniesCountByPlan(plan.name) }}</h3>
+                    <h6 class="mb-0">{{ plan.name }}</h6>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar"
+                         [style.width.%]="totalCompanies ? (getCompaniesCountByPlan(plan.name) / totalCompanies) * 100 : 0"
+                         [class.bg-primary]="normalize(plan.name) === 'PRO'"
+                         [class.bg-info]="normalize(plan.name) === 'STARTER'"
+                         [class.bg-dark]="normalize(plan.name) === 'ENTERPRISE'">
+                    </div>
+                  </div>
+                  <small class="text-muted">
+                    {{ totalCompanies ? ((getCompaniesCountByPlan(plan.name) / totalCompanies) * 100) : 0 | number:'1.1-1' }}%
+                  </small>
+                </div>
+              </div>
+
+              <div *ngIf="subscriptionPlans.length === 0" class="text-center text-muted">
+                Aucune donnée de répartition.
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>

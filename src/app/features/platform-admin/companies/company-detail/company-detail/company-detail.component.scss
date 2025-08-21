@@ -1,0 +1,20 @@
+.company-detail {
+  padding: 2rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.card {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.form-label {
+  font-size: .875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}

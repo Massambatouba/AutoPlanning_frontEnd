@@ -1,4 +1,4 @@
-<nav 
+<nav
   class="offcanvas offcanvas-start bg-light border-end"
   [class.show]="isOpen"
   tabindex="-1"
@@ -11,7 +11,7 @@
   <div class="offcanvas-body p-0">
     <ul class="nav nav-pills flex-column">
       <li class="nav-item" *ngFor="let item of navItems">
-        <a 
+        <a
           class="nav-link d-flex align-items-center"
           [routerLink]="item.route"
           routerLinkActive="active"

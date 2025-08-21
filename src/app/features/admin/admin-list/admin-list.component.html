@@ -1,0 +1,102 @@
+<!-- src/app/features/admin/pages/admin-list/admin-list.component.html -->
+<div class="container-xxl py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0">Admins de site</h2>
+
+    <a class="btn btn-primary d-inline-flex align-items-center gap-2"
+       [routerLink]="['/admin/admins/create']">
+      <i class="bi bi-person-plus"></i>
+      <span>Créer un admin-site</span>
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Rôles</th>
+            <th>Accès</th>
+            <th>Statut</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let a of admins">
+            <td>{{ a.firstName }} {{ a.lastName }}</td>
+            <td>{{ a.email }}</td>
+
+            <td>
+              <ng-container *ngFor="let r of a.roles">
+                <span class="badge me-1" [ngClass]="roleClass(r)">{{ roleLabel(r) }}</span>
+              </ng-container>
+            </td>
+
+            <td>
+              <span *ngIf="a.manageAllSites" class="badge bg-success">Tous les sites</span>
+              <ng-container *ngIf="!a.manageAllSites">
+                <span class="badge bg-secondary me-1" *ngFor="let s of a.siteIds">#{{ s }}</span>
+              </ng-container>
+            </td>
+
+            <td>
+              <span class="badge" [ngClass]="a.active ? 'bg-success' : 'bg-secondary'">
+                {{ a.active ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+
+            <td class="text-end">
+              <div class="btn-group" role="group" aria-label="Actions">
+                <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center"
+                   [routerLink]="['/admin/admins', a.id, 'edit']"
+                   title="Modifier">
+                  <i class="bi bi-pencil me-1"></i>
+                  <span class="d-none d-sm-inline">Éditer</span>
+                </a>
+
+                <button class="btn btn-sm btn-outline-success d-inline-flex align-items-center"
+                        (click)="grantAll(a.id)"
+                        [disabled]="a.manageAllSites"
+                        title="Donner accès à tous les sites">
+                  <i class="bi bi-shield-check me-1"></i>
+                  <span class="d-none d-sm-inline">Tout accorder</span>
+                </button>
+
+                <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center"
+                        (click)="revokeAll(a)"
+                        [disabled]="!a.manageAllSites"
+                        title="Retirer l'accès global">
+                  <i class="bi bi-shield-slash me-1"></i>
+                  <span class="d-none d-sm-inline">Retirer tout</span>
+                </button>
+
+                <button class="btn btn-sm btn-outline-warning d-inline-flex align-items-center"
+                        (click)="toggleActive(a)"
+                        [disabled]="isMe(a)"
+                        [title]="a.active ? 'Désactiver' : 'Activer'">
+                  <i class="me-1" [ngClass]="a.active ? 'bi bi-person-x' : 'bi bi-person-check'"></i>
+                  <span class="d-none d-sm-inline">{{ a.active ? 'Désactiver' : 'Activer' }}</span>
+                </button>
+
+                <button class="btn btn-sm btn-outline-danger d-inline-flex align-items-center"
+                        (click)="remove(a)"
+                        [disabled]="isMe(a)"
+                        title="Supprimer l'admin">
+                  <i class="bi bi-trash me-1"></i>
+                  <span class="d-none d-sm-inline">Supprimer</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="admins.length === 0">
+            <td colspan="6" class="text-center text-muted py-4">Aucun admin.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

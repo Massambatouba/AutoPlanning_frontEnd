@@ -12,12 +12,13 @@ import {
 import { Company } from 'src/app/shared/models/company.model';
 import { EmployeeRoutingModule } from '../employee-routing.model';
 import { AssignmentService } from 'src/app/services/assignment.service';
-import { ScheduleAssignmentRequest } from 'src/app/shared/models/schedule.model';
+import { Schedule, ScheduleAssignmentRequest } from 'src/app/shared/models/schedule.model';
 import { AgentTypeAbbreviationPipe } from 'src/app/pipes/agent-type-abbreviation.pipe';
 import { AbsenceTypeAbbreviationPipe } from 'src/app/pipes/absence-type-abbreviation.pipe';
 import { Site } from 'src/app/shared/models/site.model';
 import { Subscription } from 'rxjs';
 import { CompanyRoutingModule } from '../../company/company-routing.module';
+import { ScheduleService } from 'src/app/services/schedule.service';
 
 @Component({
   standalone: true,
@@ -49,6 +50,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
 
   private sub!: Subscription;
 
+   sending = false; 
 
   selectedDateKey: string = '';
   selectedSiteName: string = '';
@@ -58,6 +60,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   showAddForm = false;
   addForm!: FormGroup;
   private pendingDateKey = '';
+  schedule!: Schedule;
 
   totalOrdinaryMin = 0;   // heures semaine hors nuit
   totalNightMin = 0;      // heures de nuit (21h–5h)
@@ -70,6 +73,7 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
 
   // URL du logo (peut être null si non défini)
   companyLogoUrl: string | null = null;
+  printMode = false;
 
   // On stocke mois/année du planning pour générer tous les jours
   planningMonth: number = 0; // de 1 à 12
@@ -99,15 +103,36 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private fb: FormBuilder,
     private employeeService: EmployeeService,
+    private scheduleSrv: ScheduleService,
     private companyService: CompanyService,
     private assignmentService: AssignmentService
   ) {}
 
   ngOnInit(): void {
+
+     /** 1) sommes-nous en print ?  */
+    this.printMode = this.route.snapshot.data['printMode'] === true;
+
+    /** 2) si print → on récupère scheduleId depuis ?schedule= */
+    if (this.printMode) {
+      this.scheduleId = Number(this.route.snapshot.queryParamMap.get('schedule'));
+    }
+
+    /** 3) charge l’employé comme avant */
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    const idParam = this.route.snapshot.paramMap.get('id');
     this.initAddForm();
     this.loadEmployee(id);
+
+    /** 4) dès que le planning est prêt on lance l’impression */
+    if (this.printMode) {
+      // on attend que loadPlanning() finisse : petit setTimeout suffit
+      setTimeout(() => window.print(), 1000);
+    }
+
+    // const id1 = Number(this.route.snapshot.paramMap.get('id1'));
+    // const idParam = this.route.snapshot.paramMap.get('id1');
+    // this.initAddForm();
+    // this.loadEmployee(id1);
 
     this.sub = this.assignmentService.refresh$
     .subscribe(() => this.loadPlanning());
@@ -128,6 +153,29 @@ getSiteByName(name: string): Site | undefined {
   console.log('[getSiteByName]', name, result);
   return result;
 }
+
+sendToEmployee(empId: number) {
+  if (!this.scheduleId) {                     // ← on vérifie l’ID, pas l’objet
+    alert('Planning non chargé');
+    return;
+  }
+
+  this.sending = true;
+
+  this.scheduleSrv
+      .sendScheduleToEmployee(this.scheduleId, empId)   // ← id, pas objet
+      .subscribe({
+        next : ()  => {
+          this.sending = false;
+          alert('Planning envoyé ✔︎');
+        },
+        error: err => {
+          this.sending = false;
+          alert('Erreur d’envoi : ' + (err.error?.message || err.message));
+        }
+      });
+}
+
 
 
 
@@ -286,7 +334,7 @@ getDuration(a: AssignmentDTO): string {
         next: (data) => {
           this.employeePlanning = data;
           this.prepareTable();
-          this.prepareTable();
+          if (this.printMode) window.print();
         },
         error: (err) => {
           console.error('Erreur chargement planning', err);

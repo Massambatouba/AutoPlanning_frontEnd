@@ -542,7 +542,30 @@
   font-size: .9rem;
   line-height: 1.35;
 }
-  
+
+/* rien ne change pour l’affichage normal */
+
+/* spécial impression */
+@media print {
+
+  /* on supprime les paddings du host */
+  :host {
+    display: block;
+    padding: 0;
+  }
+
+  /* on force la largeur à 100 % pour le tableau */
+  table.planning-grid { width: 100%; font-size: 11pt; }
+
+  /* on cache tous les éléments inutiles qui auraient échappé au *ngIf */
+  .page-header,
+  .employee-info,
+  .employee-actions,
+  .overlay,
+  nav, footer, aside { display: none !important; }
+}
+
+
 
 
 

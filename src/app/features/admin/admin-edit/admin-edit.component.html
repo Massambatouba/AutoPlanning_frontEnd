@@ -1,0 +1,23 @@
+<!-- admin-edit.component.html -->
+<div class="container py-3" *ngIf="admin">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Modifier {{ admin.firstName }} {{ admin.lastName }}</h2>
+    <button class="btn btn-success"
+            (click)="grantAll()"
+            [disabled]="admin.manageAllSites">
+      <i class="material-icons me-1">verified_user</i> Accès à tous les sites
+    </button>
+  </div>
+
+  <div class="card p-3">
+    <div class="mb-3">
+      <label class="form-label">Sites</label>
+      <select class="form-select" name="siteIds" multiple [(ngModel)]="siteIds">
+        <option *ngFor="let s of sites" [ngValue]="s.id">{{ s.name }}</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" (click)="saveSites()">Enregistrer</button>
+    <a class="btn btn-outline-secondary ms-2" routerLink="/admin/admins">Retour</a>
+  </div>
+</div>

@@ -6,7 +6,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getToken();
 
-  console.log('[AuthInterceptor] Token:', token);  // 🔍 debug
+  console.log('[AuthInterceptor] Token:', token); 
   
   if (token) {
     const cloned = req.clone({

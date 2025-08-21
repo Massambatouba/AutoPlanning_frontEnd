@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { filter, finalize, of, Subscription, tap } from 'rxjs';
@@ -14,6 +14,7 @@ import {
 } from 'src/app/shared/models/schedule.model';
 import { ScheduleComplianceComponent } from '../schedule-compliance/schedule-compliance.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   standalone  : true,
@@ -30,6 +31,10 @@ export class ScheduleDetailComponent implements OnInit, OnDestroy {
   schedule?: Schedule;
   assignments!: ScheduleAssignment[];
   siteRules : WeeklyScheduleRule[] = [];
+
+  private toastr = inject(ToastrService);
+
+  sendingAll = false;
 
   loadingAssignments = false;
   geratingAssignments = false;
@@ -149,6 +154,9 @@ agentTypeConfig: Record<string, AgentTypeConfig> = {
     this.scheduleSrv.getScheduleById(id).pipe(
       tap(s => {
         this.schedule    = s;
+        console.log('DEBUG schedule:', this.schedule);
+        console.log('DEBUG permissions:', this.schedule?.permissions, 'canEdit:', this.schedule?.canEdit,
+            'published:', this.schedule?.isPublished, 'sent:', this.schedule?.isSent);
         this.assignments = s.assignments ?? [];
       }),
       finalize(()=> this.loadingSchedule = false)
@@ -195,6 +203,26 @@ agentTypeConfig: Record<string, AgentTypeConfig> = {
         }
       });
   }
+  get canEdit(): boolean {
+  // si le back renvoie permissions, on respecte
+  if (this.schedule?.permissions) return !!this.schedule.permissions.edit;
+  // sinon fallback sur canEdit
+  return !!this.schedule?.canEdit;
+}
+
+get canGenerate(): boolean {
+  if (this.schedule?.permissions) return !!this.schedule.permissions.generate;
+  // fallback logique : peut éditer ET NON publié
+  return this.canEdit && !this.schedule?.isPublished && !this.schedule?.isPublished;
+}
+
+get canSendAll(): boolean {
+  if (this.schedule?.permissions) return !!this.schedule.permissions.send;
+  // fallback logique : peut éditer ET publié ET pas déjà envoyé
+  const published = this.schedule?.isPublished ?? this.schedule?.isPublished;
+  const sent = this.schedule?.isSent ?? this.schedule?.isSent;
+  return this.canEdit && !!published && !sent;
+}
 
   getCalendarDays() {
     // Retourner les jours selon le mode de vue
@@ -359,9 +387,6 @@ doneByDay:     Record<string, number> = {};
       });
   }
 
-  /* ╔════════════════════════════════╗
-     ║  construction de la grille     ║
-     ╚════════════════════════════════╝ */
   private buildMonthGrid(): void {
     if (!this.schedule) return;
 
@@ -467,7 +492,7 @@ this.missingCount = {};
 Object.entries(needMap).forEach(([d, types]) => {
   // somme des manquants pour ce jour
   const totalMissing = Object.values(types).reduce((s, n) => s + n, 0);
-  this.missingCount[d] = totalMissing;   
+  this.missingCount[d] = totalMissing;
 });
 
 
@@ -485,9 +510,6 @@ Object.entries(needMap).forEach(([d, types]) => {
     this.loadAssignments();
   }
 
-  /* ╔════════════════════════════════╗
-     ║  helpers utilisés en template  ║
-     ╚════════════════════════════════╝ */
   durationMin(a: ScheduleAssignment): number {
     const [sh,sm] = a.startTime.split(':').map(Number);
     let  [eh,em] = a.endTime.split(':').map(Number);
@@ -514,6 +536,29 @@ Object.entries(needMap).forEach(([d, types]) => {
                      borderColor:'border-secondary'};
   }
 
+
+
+  sendScheduleAll() {
+    if (!this.schedule) { return; }
+    this.sendingAll = true;
+
+    this.scheduleSrv.send(this.schedule.id)
+      .pipe(finalize(() => this.sendingAll = false))
+      .subscribe({
+        next : (report) => {
+          /* supposons que votre backend renvoie {successCount, failureCount} */
+          this.toastr.success(
+            `Envoyé : ${report.successCount} OK, ${report.failureCount} erreur(s)`,
+            'Plannings envoyés'
+          );
+        },
+        error: (err)   =>
+          this.toastr.error(err.error ?? err.message, 'Échec d’envoi')
+      });
+  }
+
+
+
 getAssignmentsForDay(dayIso: string): ScheduleAssignment[] {
   return this.assignments.filter(a =>
     (typeof a.date === 'string'
@@ -524,9 +569,7 @@ getAssignmentsForDay(dayIso: string): ScheduleAssignment[] {
 }
   isGap(day:string){ return !!this.coverageGap[day]; }
 
-  /* ╔════════════════════════════════╗
-     ║  actions bouton                ║
-     ╚════════════════════════════════╝ */
+
   publishSchedule() {
     if (!this.schedule) return;
 

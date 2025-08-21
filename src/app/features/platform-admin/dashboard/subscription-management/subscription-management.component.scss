@@ -1,0 +1,8 @@
+.subscription-management {
+      padding: 2rem;
+      background-color: #f8f9fa;
+      min-height: 100vh;
+    }
+    .card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15) !important; }
+    .position-absolute { top: -10px !important; }

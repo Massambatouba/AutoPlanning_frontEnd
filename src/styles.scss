@@ -11,7 +11,7 @@
   --primary-700: #2C5282;
   --primary-800: #1A365D;
   --primary-900: #1A365D;
-  
+
   /* Secondary Colors */
   --secondary-50: #F0FFF4;
   --secondary-100: #C6F6D5;
@@ -23,12 +23,12 @@
   --secondary-700: #276749;
   --secondary-800: #22543D;
   --secondary-900: #1C4532;
-  
+
   /* Alert Colors */
   --success-500: #48BB78;
   --warning-500: #ECC94B;
   --error-500: #F56565;
-  
+
   /* Neutral Colors */
   --neutral-50: #F7FAFC;
   --neutral-100: #EDF2F7;
@@ -40,7 +40,7 @@
   --neutral-700: #2D3748;
   --neutral-800: #1A202C;
   --neutral-900: #171923;
-  
+
   /* Spacing */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -286,7 +286,7 @@ button {
   .md\:flex {
     display: flex;
   }
-  
+
   .md\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -296,7 +296,7 @@ button {
   .lg\:flex {
     display: flex;
   }
-  
+
   .lg\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -381,3 +381,15 @@ body {
 }
 
 h1, h2, h3 { margin: 0 0 .5rem 0; line-height: 1.2; }
+
+
+/* styles.scss ou planning.component.scss */
+@media print {
+  #planningWrapper {          /* ← adapte le sélecteur au bon div */
+    max-height: none !important;
+    height:       auto !important;
+    overflow:     visible !important;
+  }
+}
+
+

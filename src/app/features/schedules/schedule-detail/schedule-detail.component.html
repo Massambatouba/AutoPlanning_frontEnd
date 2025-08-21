@@ -23,12 +23,20 @@
     <button
       class="btn success"
       (click)="generateAssignments()"
-      [disabled]="geratingAssignments || schedule.isPublished"
+      [disabled]="geratingAssignments || !canGenerate"
     >
       <span *ngIf="geratingAssignments"
-            class="spinner-border spinner-border-sm me-1"></span>
+        class="spinner-border spinner-border-sm me-1"></span>
       Générer automatiquement
     </button>
+
+    
+  <!-- NOUVEAU : envoi groupé -->
+  <button class="btn primary" (click)="sendScheduleAll()"
+      [disabled]="sendingAll || !assignments.length || !canSendAll">
+    <span *ngIf="sendingAll" class="spinner-border spinner-border-sm me-1"></span>
+    <i class="bi bi-send"></i> Envoyer à tous
+  </button>
   </div>
 </nav>
 

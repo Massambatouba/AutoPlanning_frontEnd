@@ -12,12 +12,11 @@ import { CommonModule } from '@angular/common';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   imports: [
-    AdminRoutingModule,
     CommonModule,
     FormsModule,
     LucideAngularModule,
     ReactiveFormsModule,
-    RouterModule         // routes paresseuses /admin
+    RouterModule         
   ]
 })
 export class LoginComponent {
@@ -49,10 +48,25 @@ export class LoginComponent {
 
     this.authService.login(email, password)
       .subscribe({
-        next: () => {
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-          this.router.navigate([returnUrl]);
-        },
+      next: () => {
+        if (this.authService.mustChangePassword()) {
+          this.router.navigate(['/auth/change-password']);
+          return;
+        }
+      
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] as string | undefined;
+      
+        // Rôles depuis le token / session
+        const roles = this.authService.getRoles();            // ← ajoute la méthode ci-dessous
+        const isSuperAdmin = roles.includes('SUPER_ADMIN');
+      
+        // Si un returnUrl est fourni, on le respecte.
+        // Sinon: SUPER_ADMIN → /platform-admin, le reste → /dashboard
+        const target =
+          returnUrl ?? (isSuperAdmin ? '/platform-admin' : '/dashboard');
+      
+        this.router.navigateByUrl(target);
+      },
         error: err => {
           this.error = 'Email ou mot de passe invalide. Veuillez réessayer.';
           this.loading = false;

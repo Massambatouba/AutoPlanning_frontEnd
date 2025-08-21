@@ -29,15 +29,15 @@ export class SidenavComponent {
    @Input() isOpen = true;
 
 navItems: NavItem[] = [
-{ label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
-{ label: 'Schedules', icon: 'event', route: '/schedules' },
-{ label: 'Employees', icon: 'people', route: '/employees' },
-{ label: 'Sites', icon: 'business', route: '/sites' },
-{ label: 'Reports', icon: 'assessment', route: '/reports' },
-{ label: 'Subscription', icon: 'card_membership', route: '/subscription' },
-{ label: 'Settings', icon: 'settings', route: '/settings' },
-{ label: 'Admin Panel', icon: 'admin_panel_settings', route: '/admin', roles: ['ADMIN'] },
-{ label: 'Gestion des Heures', icon: 'schedule', route: '/admin/hour-requirements', roles: ['ADMIN'] }
+  { label: 'Dashboard',        icon: 'layout-dashboard', route: '/dashboard' },
+  { label: 'Schedules',        icon: 'calendar-days',    route: '/schedules' },
+  { label: 'Employees',        icon: 'users',            route: '/employees' },
+  { label: 'Sites',            icon: 'building-2',       route: '/sites' },
+  { label: 'Reports',          icon: 'bar-chart-2',      route: '/reports' },
+  { label: 'Subscription',     icon: 'credit-card',      route: '/subscription' },
+  { label: 'Settings',         icon: 'settings',         route: '/settings' },
+  { label: 'Admin Panel',      icon: 'shield',           route: '/admin', roles: ['ADMIN'] },
+  { label: 'Gestion des Heures', icon: 'clock',          route: '/admin/hour-requirements', roles: ['ADMIN'] },
 ];
 
   constructor(private authService: AuthService, private router: Router) {

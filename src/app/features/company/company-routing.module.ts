@@ -10,7 +10,7 @@ export const COMPANY_ROUTES: Routes = [
   {
     path: 'profile',
     loadComponent: () => import('./company-profile/company-profile.component').then(m => m.CompanyProfileComponent)
-  }
+  },
 ];
 @NgModule({
   imports: [RouterModule.forChild(COMPANY_ROUTES)],
