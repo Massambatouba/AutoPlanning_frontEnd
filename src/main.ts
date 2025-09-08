@@ -25,7 +25,8 @@ import {
   BarChart2,
   CalendarDays,
   Building2,
-  Clock
+  Clock,
+  UserPlus
 } from 'lucide-angular';
 import { ToastrModule } from 'ngx-toastr';
 
@@ -50,7 +51,8 @@ bootstrapApplication(AppComponent, {
         Bell,
         User,
         LogOut,
-
+        Calendar,
+         UserPlus,
         CalendarDays,
         Shield,
         ShieldCheck,

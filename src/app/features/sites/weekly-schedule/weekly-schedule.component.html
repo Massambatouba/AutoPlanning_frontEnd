@@ -12,6 +12,11 @@
       <i class="material-icons">add</i>
       Créer un Modèle
     </button>
+    
+    <a class="btn btn-outline-secondary" [routerLink]="['/sites', siteId, 'exceptions']">
+      Gérer les exceptions
+    </a>
+
   </header>
 
   <div *ngIf="loading" class="loading">

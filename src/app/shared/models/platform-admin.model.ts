@@ -25,10 +25,13 @@ export interface CompanyOverview {
 export interface SubscriptionPlan {
   id: number;
   name: string;
+  description?: string;
   price: number;
+  durationMonths?: number;
   maxEmployees: number;
   maxSites: number;
   features: string[];
+  isActive?: boolean;
   isPopular?: boolean;
 }
 
@@ -45,4 +48,20 @@ export interface PageResponse<T> {
   totalPages?: number;
   number?: number;
   size?: number;
+}
+
+export interface PlatformSettings {
+  siteName: string;
+  logoUrl?: string;
+  supportEmail?: string;
+  defaultCurrency: string;
+  vatRate: number;
+  vatEnabled: boolean;
+  trialDays: number | null;
+  defaultPlanId: number | null;
+  require2FA: boolean;
+  passwordMinLength: number;
+  smtpHost?: string; smtpPort?: number; smtpUser?: string;
+  paymentProvider: 'NONE' | 'STRIPE';   // <-- AJOUT
+  dataRetentionDays?: number;
 }

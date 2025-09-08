@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CompanyOverview, PlatformStats, SubscriptionPlan } from 'src/app/shared/models/platform-admin.model';
 import { PlatformAdminService } from 'src/app/services/platform-admin.service';
+import { FormsModule } from '@angular/forms';
+import { Modal } from 'bootstrap';
 
 @Component({
   selector: 'app-subscription-management',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './subscription-management.component.html',
   styleUrls: ['./subscription-management.component.scss']
 })
@@ -17,6 +19,7 @@ export class SubscriptionManagementComponent implements OnInit {
 
   stats?: PlatformStats;
   computedMonthlyRevenue = 0;
+  isCreate = false;
 
   // KPIs
   activeSubscriptions = 0;
@@ -24,8 +27,26 @@ export class SubscriptionManagementComponent implements OnInit {
   expiredSubscriptions = 0;
   totalCompanies = 0;
 
+  editModel: {
+    id: number;
+    name: string;
+    description?: string;
+    maxEmployees: number;
+    maxSites: number;
+    price: number;
+    durationMonths?: number;
+    isActive?: boolean;
+  } | null = null;
+
   loading = true;
   errorMsg = '';
+
+    // UI état modale
+  showEdit = false;
+  saving = false;
+
+  @ViewChild('editModal') editModalRef!: ElementRef;
+  private editModalInstance?: Modal;
 
   constructor(private platformAdminService: PlatformAdminService) {}
 
@@ -109,10 +130,82 @@ export class SubscriptionManagementComponent implements OnInit {
     return p.name;
   }
 
-  /* Actions (à connecter à ton backend si tu as les endpoints) */
-  editPlan(plan: SubscriptionPlan): void {
-    console.log('Modifier le plan:', plan);
-    // TODO: ouvrir un modal, envoyer PUT /platform-admin/subscription-plans/:id ...
+  /* ====== Modale édition ====== */
+editPlan(plan: SubscriptionPlan): void {
+  this.editModel = {
+    id: plan.id,
+    name: plan.name,
+    description: (plan as any).description ?? '',
+    maxEmployees: plan.maxEmployees,
+    maxSites: plan.maxSites,
+    price: plan.price,
+    durationMonths: (plan as any).durationMonths ?? 1,
+    isActive: (plan as any).isActive ?? true
+  };
+  this.openEditModal(); // ← au lieu de this.showEdit = true
+}
+
+createPlan(): void {
+  // modèle vide par défaut
+  this.editModel = {
+    id: 0 as any,              // pas utilisé côté POST
+    name: '',
+    description: '',
+    maxEmployees: 0,
+    maxSites: 0,
+    price: 0,
+    durationMonths: 1,
+    isActive: true
+  };
+  this.isCreate = true;
+  this.openEditModal()
+}
+
+    
+  cancelEdit(): void {
+    this.showEdit = false;
+    this.editModel = null;
+  }
+
+    private openEditModal(): void {
+    if (!this.editModalInstance) {
+      this.editModalInstance = Modal.getOrCreateInstance(this.editModalRef.nativeElement);
+      // Optionnel : reset du modèle à la fermeture (via événement Bootstrap)
+      this.editModalRef.nativeElement.addEventListener('hidden.bs.modal', () => {
+        this.editModel = null;
+        this.saving = false;
+      });
+    }
+    this.editModalInstance.show();
+  }
+
+  private hideEditModal(): void {
+    this.editModalInstance?.hide();
+  }
+
+  closeEdit(): void {
+    this.hideEditModal();
+  }
+
+  saveEdit(): void {
+    if (!this.editModel) return;
+    this.saving = true;
+    this.platformAdminService.updateSubscriptionPlan(this.editModel).subscribe({
+      next: (updated) => {
+        // Remplace l’item dans la liste sans recharger toute la page
+        const idx = this.subscriptionPlans.findIndex(p => p.id === updated.id);
+        if (idx >= 0) {
+          this.subscriptionPlans[idx] = { ...this.subscriptionPlans[idx], ...updated };
+        }
+        this.saving = false;
+        this.showEdit = false;
+        this.editModel = null;
+      },
+      error: () => {
+        this.saving = false;
+        alert('Échec de la mise à jour du plan.');
+      }
+    });
   }
 
   deletePlan(plan: SubscriptionPlan): void {
@@ -120,8 +213,37 @@ export class SubscriptionManagementComponent implements OnInit {
     // TODO: confirmer + DELETE /platform-admin/subscription-plans/:id puis reload
   }
 
-  createPlan(): void {
-    console.log('Créer un nouveau plan');
-    // TODO: ouvrir un modal + POST /platform-admin/subscription-plans
-  }
+  // --- utils ---
+private normalize_(s?: string): string {
+  return (s ?? '').trim().toUpperCase();
+}
+
+
+// % du total plateforme pour un plan donné
+percentByPlan(planName: string): number {
+  const n = this.getCompaniesCountByPlan(planName);
+  return this.totalCompanies ? Math.round((n / this.totalCompanies) * 100) : 0;
+}
+
+// Comptage par STATUT à l’intérieur d’un plan (barres empilées)
+getStatusCountByPlan(
+  planName: string,
+  status: 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'INACTIVE'
+): number {
+  const pid = this.normalize_(planName);
+  return this.companies.filter(
+    c => this.normalize_(c.subscriptionPlan) === pid && c.subscriptionStatus === status
+  ).length;
+}
+
+// % par STATUT dans un plan
+percentStatusWithinPlan(
+  planName: string,
+  status: 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'INACTIVE'
+): number {
+  const total = this.getCompaniesCountByPlan(planName);
+  if (!total) return 0;
+  const n = this.getStatusCountByPlan(planName, status);
+  return Math.round((n / total) * 100);
+}
 }

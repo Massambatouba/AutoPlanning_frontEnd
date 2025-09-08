@@ -34,6 +34,8 @@ export class ScheduleListComponent implements OnInit {
   schedules: Schedule[] = [];
   filteredSchedules: Schedule[] = [];
   sites: Site[] = [];
+  deletingId: number | null = null;
+
 
   managedSites: { id: number; name: string }[] = [];
 
@@ -59,10 +61,28 @@ export class ScheduleListComponent implements OnInit {
   ngOnInit(): void {
     this.loadSites();
     //this.fetchSchedules()
-    this.loadManagedSites();
     this.loadSchedules();
-    this.loadSchedules();
+    this.fetchSchedules(); 
   }
+
+  deleteSchedule(s: Schedule) {
+  if (!s?.id) return;
+  if (!confirm(`Supprimer le planning « ${s.name} » ? Cette action est définitive.`)) return;
+
+  this.deletingId = s.id;
+  this.scheduleService.deleteSchedule(s.id).subscribe({
+    next: () => {
+      this.deletingId = null;
+      this.fetchSchedules(); // recharge la liste avec les filtres actifs
+    },
+    error: (err) => {
+      this.deletingId = null;
+      console.error('Suppression impossible', err);
+      alert(err?.error ?? err?.message ?? 'Suppression impossible');
+    }
+  });
+}
+
 
   loadSites(): void {
     this.siteService.getSites().subscribe({
@@ -173,6 +193,7 @@ get canCreateOrGenerate(): boolean {
 
 applyFilters(): void {
   this.loading = true;
+  this.fetchSchedules();
   this.scheduleService.list({
       siteId: this.siteFilter === 'all' ? undefined : +this.siteFilter,
       month:  this.monthFilter === 'all' ? undefined : +this.monthFilter,

@@ -1,0 +1,128 @@
+<div class="container my-4">
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2 class="mb-0">
+        {{ editing ? 'Modifier une exception' : 'Créer une exception' }}
+      </h2>
+    </div>
+
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Type *</label>
+            <select class="form-select" formControlName="type">
+              <option *ngFor="let t of types" [value]="t.value">{{ t.label }}</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Du *</label>
+            <input type="date" class="form-control" formControlName="startDate">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Au *</label>
+            <input type="date" class="form-control" formControlName="endDate">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Jours de la semaine (facultatif)</label>
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button"
+                      class="btn btn-sm"
+                      [class.btn-primary]="form.value.daysOfWeek?.includes(d.value)"
+                      [class.btn-outline-primary]="!form.value.daysOfWeek?.includes(d.value)"
+                      *ngFor="let d of days"
+                      (click)="toggleDay(d.value)">
+                {{ d.label }}
+              </button>
+            </div>
+            <div class="form-text">Vide = tous les jours dans l’intervalle.</div>
+          </div>
+
+          <!-- Champs shift (visibles selon type) -->
+          <ng-container *ngIf="['ADD_SHIFT','MASK_SHIFT','REPLACE_DAY'].includes(form.value.type)">
+            <div class="col-md-4">
+              <label class="form-label">Type d’agent {{ form.value.type !== 'MASK_SHIFT' ? '*' : '' }}</label>
+              <select class="form-select" formControlName="agentType">
+                <option [ngValue]="null">— (tous)</option>
+                <option *ngFor="let a of agentTypes" [value]="a">{{ a }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Début {{ form.value.type !== 'MASK_SHIFT' ? '*' : '' }}</label>
+              <input type="time" class="form-control" formControlName="startTime">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Fin {{ form.value.type !== 'MASK_SHIFT' ? '*' : '' }}</label>
+              <input type="time" class="form-control" formControlName="endTime">
+            </div>
+
+            <div class="col-md-4" *ngIf="['ADD_SHIFT','REPLACE_DAY'].includes(form.value.type)">
+              <label class="form-label">Nombre requis *</label>
+              <input type="number" min="1" class="form-control" formControlName="requiredCount">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Expérience min.</label>
+              <input type="number" min="0" class="form-control" formControlName="minExperience">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Compétences (CSV)</label>
+              <input type="text" class="form-control" formControlName="requiredSkillsCsv" placeholder="cqp, incendie, ...">
+            </div>
+          </ng-container>
+        </div>
+
+        <div class="mt-3 text-end">
+          <button type="button" class="btn btn-outline-secondary me-2" *ngIf="editing" (click)="cancelEdit()">Annuler</button>
+          <button class="btn btn-primary" type="submit">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="mt-4 card shadow-sm">
+    <div class="card-header"><h2 class="mb-0">Exceptions</h2></div>
+    <div class="card-body p-0">
+      <div *ngIf="loading" class="p-3">Chargement…</div>
+      <div *ngIf="error" class="alert alert-danger m-3">{{ error }}</div>
+
+      <table class="table table-hover mb-0" *ngIf="!loading && items.length">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Période</th>
+            <th>Jours</th>
+            <th>Agent/Heures</th>
+            <th>Requis</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of items">
+            <td><span class="badge bg-secondary">{{ typeLabel(e.type) }}</span></td>
+            <td>{{ e.startDate }} → {{ e.endDate }}</td>
+            <td>{{ e.daysOfWeek?.join(', ') || 'Tous' }}</td>
+            <td>
+              <div *ngIf="e.agentType">{{ e.agentType }}</div>
+              <div *ngIf="e.startTime || e.endTime">{{ e.startTime || '—' }} - {{ e.endTime || '—' }}</div>
+            </td>
+            <td>{{ e.requiredCount || '—' }}</td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-primary me-2" (click)="edit(e)">Modifier</button>
+              <button class="btn btn-sm btn-outline-danger" (click)="remove(e)">Supprimer</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="!loading && !items.length" class="p-3 text-muted">Aucune exception définie.</div>
+    </div>
+  </div>
+</div>
+

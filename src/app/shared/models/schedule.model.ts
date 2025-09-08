@@ -8,14 +8,15 @@ export interface Schedule {
   year: number;
   site?: { id: number; name: string };
   isPublished: boolean;
-  startDate: string;
-  endDate: string;
   isSent: boolean;
   sentAt?: Date;
   createdBy?: string;
   completionRate: number;
   totalEmployees?: number;
   totalAssignments?: number;
+  periodType?: 'MONTH' | 'RANGE';
+  startDate?: string;
+  endDate?: string;
   totalHours?: number;
   createdAt: string | Date | undefined;
   updatedAt: Date;
@@ -49,7 +50,7 @@ export interface ScheduleAssignment {
   employeeId: number;
   siteId: number;
   shift?: string;
-  date: Date;
+  date: string | Date;
   employeeName: string;
   startTime: string;
   endTime: string;
@@ -64,17 +65,16 @@ export interface ScheduleAssignment {
 }
 
 export interface ScheduleAssignmentRequest {
-  /** Date au format ISO "YYYY-MM-DD" */
-  date: string;
-  /** Nom du site */
-  siteName: string;
-  /** Libellé du shift (ex. "MATIN", "NUIT") */
-  shift: string;
-  /** Heure de début au format "HH:mm" */
-  startTime: string;
-  /** Heure de fin au format "HH:mm" */
-  endTime: string;
+  siteId: number;
+  employeeId: number;
+  date: string;      // "YYYY-MM-DD"
+  startTime: string; // "HH:mm"
+  endTime: string;   // "HH:mm"
+  shift?: string;
+  agentType?: string;
+  notes?: string;
 }
+
 
 export interface ContractHourRequirement {
   id: number;
@@ -129,21 +129,21 @@ name: string;
 date: Date;
 }
 
-export interface AgentSchedule {         
-  agentType: string;                    
-  startTime: string;                    
-  endTime:   string;                    
-  requiredCount: number;                 
+export interface AgentSchedule {
+  agentType: string;
+  startTime: string;
+  endTime:   string;
+  requiredCount: number;
   notes?: string;
 }
 
-export interface WeeklyScheduleRule {     
+export interface WeeklyScheduleRule {
   id: number;
   dayOfWeek:
       'SUNDAY' | 'MONDAY' | 'TUESDAY' | 'WEDNESDAY'
-      | 'THURSDAY' | 'FRIDAY' | 'SATURDAY';                    
+      | 'THURSDAY' | 'FRIDAY' | 'SATURDAY';
   maxEmployees: number;
-  agents: AgentSchedule[];              
+  agents: AgentSchedule[];
 }
 
 export interface ScheduleResponse {
@@ -181,4 +181,32 @@ export interface ScheduleResponse {
   // Optionnel selon endpoint (liste: souvent absent)
   assignments?: any[];
 }
+
+export interface AssignmentDTO {
+  id: number;
+  scheduleId: number;
+
+  date: string;                 // "YYYY-MM-DD"
+  startTime: string;            // "HH:mm"
+  endTime: string;              // "HH:mm"
+  duration: number;             // minutes
+
+  agentType: string;
+  shift?: string;
+  notes?: string;
+
+  status: 'ASSIGNED' | 'CONFIRMED' | 'DECLINED' | 'PENDING';
+
+  employeeId: number;
+  employeeName: string;
+
+  siteId: number;
+  siteName?: string;
+
+  absence?: boolean;
+  absenceType?: string;
+}
+
+
+
 

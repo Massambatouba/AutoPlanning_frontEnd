@@ -28,18 +28,17 @@ export const SCHEDULES_ROUTES: Routes = [
     data: { roles: ['SUPER_ADMIN','ADMIN','SITE_ADMIN'] }
   },
   {
-    path: ':id',
-    loadComponent: () => import('./schedule-detail/schedule-detail.component').then(m => m.ScheduleDetailComponent)
-  },
-  {
     path: ':id/edit',
     loadComponent: () => import('./schedule-edit/schedule-edit.component')
     .then(m => m.ScheduleEditComponent),
     canActivate: [RoleGuard, canEditScheduleGuard], 
     data: { roles: ['SUPER_ADMIN','ADMIN','SITE_ADMIN'] }
   },
+  {
+    path: ':id',
+    loadComponent: () => import('./schedule-detail/schedule-detail.component').then(m => m.ScheduleDetailComponent)
+  },
 
-  
 ];
 
 @NgModule({

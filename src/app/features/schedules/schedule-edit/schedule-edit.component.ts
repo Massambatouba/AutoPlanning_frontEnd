@@ -73,6 +73,25 @@ export class ScheduleEditComponent implements OnInit {
       });
   }
 
+  onDelete() {
+    if (!this.schedule) return;
+    if (!confirm('Supprimer ce planning ? Cette action est définitive.')) return;
+  
+    this.saving = true;
+    this.scheduleService.deleteSchedule(this.schedule.id).subscribe({
+      next: () => this.router.navigate(['/schedules']),
+      error: (error) => {
+        this.error = error?.error ?? error?.message ?? 'Suppression impossible';
+        this.saving = false;
+      }
+    });
+  }
+  get isPublished(): boolean {
+    return !!(this.schedule?.isPublished ?? (this as any).schedule?.published);
+  }
+
+
+
   onSubmit() {
     if (this.scheduleForm.invalid || !this.schedule) {
       return;
@@ -86,8 +105,9 @@ export class ScheduleEditComponent implements OnInit {
         next: () => {
           this.router.navigate(['/schedules', this.schedule?.id]);
         },
-        error: (error) => {
-          this.error = error.message;
+        error: (err) => {
+          console.error('[EDIT] update failed:', err);
+          this.error = err?.error ?? err?.message ?? 'Échec de la mise à jour';
           this.saving = false;
         }
       });

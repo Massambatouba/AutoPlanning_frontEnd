@@ -1,0 +1,99 @@
+<div class="container my-4">
+  <h1>Planning Site</h1>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Site</label>
+      <select class="form-select" [(ngModel)]="siteId" (change)="load()">
+        <option [ngValue]="null" disabled>— Sélectionnez —</option>
+        <option *ngFor="let s of sites" [ngValue]="s.id">{{ s.name }}</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Mois</label>
+      <select class="form-select" [(ngModel)]="month" (change)="load()">
+        <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [ngValue]="m">{{ m }}</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Année</label>
+      <input class="form-control" type="number" [(ngModel)]="year" (change)="load()"/>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border"></div>
+  </div>
+
+  <div *ngIf="!loading && error" class="alert alert-danger">{{ error }}</div>
+
+  <div *ngIf="!loading && scheduleId">
+    <table class="table table-sm table-bordered align-middle">
+      <thead>
+        <tr>
+          <th style="min-width:220px">Employé</th>
+          <th *ngFor="let d of tableDates" class="text-center">{{ d | date:'d' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let emp of employees">
+          <td>{{ emp.name }}</td>
+          <td *ngFor="let key of dateKeys" (click)="cellAdd(emp.id, key)" class="cell">
+            <ng-container *ngIf="map[emp.id][key]?.length; else empty">
+              <div *ngFor="let a of map[emp.id][key]" class="badge bg-light text-dark me-1"
+                   (click)="clickAssignment(a, emp.id, key, $event)">
+                {{ a.agentType || '·' }}
+                <ng-container *ngIf="a.startTime && a.endTime">
+                  {{ a.startTime | slice:0:5 }}–{{ a.endTime | slice:0:5 }}
+                </ng-container>
+                <button class="btn btn-link p-0 ms-1" (click)="delete(a); $event.stopPropagation()">✕</button>
+              </div>
+            </ng-container>
+            <ng-template #empty><span class="text-muted">—</span></ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- petite modale simple -->
+<div class="overlay" *ngIf="showForm">
+  <div class="overlay-card">
+    <h3>{{ editing ? 'Modifier' : 'Ajouter' }} une vacation</h3>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>Employé</label>
+      <select formControlName="employeeId">
+        <option *ngFor="let e of employees" [ngValue]="e.id">{{ e.name }}</option>
+      </select>
+
+      <label>Date</label>
+      <input formControlName="date" readonly />
+
+      <label>Début (HH:mm)</label>
+      <input formControlName="startTime" placeholder="07:00" />
+
+      <label>Fin (HH:mm)</label>
+      <input formControlName="endTime" placeholder="19:00" />
+
+      <label>Shift</label>
+      <input formControlName="shift" />
+
+      <label>Type d’agent</label>
+      <input formControlName="agentType" />
+
+      <label>Notes</label>
+      <input formControlName="notes" />
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+          {{ editing ? 'Modifier' : 'Ajouter' }}
+        </button>
+        <button type="button" class="btn btn-outline" (click)="showForm=false; editing=null">Annuler</button>
+      </div>
+    </form>
+  </div>
+</div>
+

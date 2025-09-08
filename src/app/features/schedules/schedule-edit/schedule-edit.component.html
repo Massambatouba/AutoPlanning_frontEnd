@@ -18,6 +18,9 @@
   </div>
 
   <div *ngIf="!loading && schedule" class="card">
+    <div class="alert alert-warning" *ngIf="isPublished">
+      Ce planning est <strong>publié</strong>. Vous ne pouvez pas le modifier.
+    </div>
     <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()" class="schedule-form">
       <div class="form-group">
         <label for="name" class="form-label">Nom du Planning</label>
@@ -28,6 +31,7 @@
           class="form-control"
           placeholder="Entrez le nom du planning"
           [class.is-invalid]="scheduleForm.get('name')?.invalid && scheduleForm.get('name')?.touched"
+          [disabled]="isPublished || saving"
         />
         <div class="error-message" *ngIf="scheduleForm.get('name')?.invalid && scheduleForm.get('name')?.touched">
           Le nom du planning est requis
@@ -58,6 +62,7 @@
             formControlName="month"
             class="form-control"
             [class.is-invalid]="scheduleForm.get('month')?.invalid && scheduleForm.get('month')?.touched"
+            [disabled]="isPublished || saving"
           >
             <option value="">Sélectionnez un mois</option>
             <option *ngFor="let month of getMonths()" [value]="month.value">{{ month.label }}</option>
@@ -74,6 +79,7 @@
             formControlName="year"
             class="form-control"
             [class.is-invalid]="scheduleForm.get('year')?.invalid && scheduleForm.get('year')?.touched"
+            [disabled]="isPublished || saving"
           >
             <option value="">Sélectionnez une année</option>
             <option *ngFor="let year of getYears()" [value]="year">{{ year }}</option>
@@ -92,6 +98,9 @@
         >
           Annuler
         </button>
+        <button type="button" class="btn btn-danger" (click)="onDelete()" [disabled]="saving">
+          Supprimer le planning
+        </button>
         <button 
           type="submit" 
           class="btn btn-primary"
@@ -102,5 +111,6 @@
         </button>
       </div>
     </form>
+
   </div>
 </div>

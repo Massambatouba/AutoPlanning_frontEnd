@@ -128,37 +128,116 @@
         </div>
 
         <!-- Répartition par Plan -->
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-transparent border-0">
-            <h5 class="card-title mb-0">Répartition par Plan</h5>
-          </div>
-          <div class="card-body">
-            <div class="row g-4">
-              <div *ngFor="let plan of subscriptionPlans; trackBy: trackPlan" class="col-md-4">
-                <div class="text-center">
-                  <div class="bg-light rounded-3 p-4 mb-3">
-                    <h3 class="text-primary mb-2">{{ getCompaniesCountByPlan(plan.name) }}</h3>
-                    <h6 class="mb-0">{{ plan.name }}</h6>
-                  </div>
-                  <div class="progress" style="height: 8px;">
-                    <div class="progress-bar"
-                         [style.width.%]="totalCompanies ? (getCompaniesCountByPlan(plan.name) / totalCompanies) * 100 : 0"
-                         [class.bg-primary]="normalize(plan.name) === 'PRO'"
-                         [class.bg-info]="normalize(plan.name) === 'STARTER'"
-                         [class.bg-dark]="normalize(plan.name) === 'ENTERPRISE'">
-                    </div>
-                  </div>
-                  <small class="text-muted">
-                    {{ totalCompanies ? ((getCompaniesCountByPlan(plan.name) / totalCompanies) * 100) : 0 | number:'1.1-1' }}%
-                  </small>
-                </div>
-              </div>
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="card-title mb-0">Répartition par Plan</h5>
+  </div>
 
-              <div *ngIf="subscriptionPlans.length === 0" class="text-center text-muted">
-                Aucune donnée de répartition.
-              </div>
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-md-4" *ngFor="let plan of subscriptionPlans; trackBy: trackPlan">
+        <div class="text-center border rounded p-3 h-100">
+          <div class="mb-2">
+            <h3 class="mb-0">{{ getCompaniesCountByPlan(plan.name) }}</h3>
+            <div class="text-muted">{{ plan.name }}</div>
+          </div>
+
+          <!-- % du total plateforme -->
+          <div class="small text-muted mb-2">
+            {{ percentByPlan(plan.name) }}% du total
+          </div>
+
+          <!-- Barre empilée par STATUT -->
+          <div class="progress" style="height: 10px;">
+            <div class="progress-bar bg-success"
+                 [style.width.%]="percentStatusWithinPlan(plan.name, 'ACTIVE')"
+                 [attr.aria-label]="'Actifs'"></div>
+            <div class="progress-bar bg-warning"
+                 [style.width.%]="percentStatusWithinPlan(plan.name, 'TRIAL')"
+                 [attr.aria-label]="'Essai'"></div>
+            <div class="progress-bar bg-danger"
+                 [style.width.%]="percentStatusWithinPlan(plan.name, 'EXPIRED')"
+                 [attr.aria-label]="'Expirés'"></div>
+            <div class="progress-bar bg-secondary"
+                 [style.width.%]="percentStatusWithinPlan(plan.name, 'INACTIVE')"
+                 [attr.aria-label]="'Inactifs'"></div>
+          </div>
+
+          <!-- Légende -->
+          <div class="d-flex justify-content-center gap-3 mt-2 small">
+            <span><span class="badge bg-success">&nbsp;</span> {{ getStatusCountByPlan(plan.name, 'ACTIVE') }}</span>
+            <span><span class="badge bg-warning">&nbsp;</span> {{ getStatusCountByPlan(plan.name, 'TRIAL') }}</span>
+            <span><span class="badge bg-danger">&nbsp;</span> {{ getStatusCountByPlan(plan.name, 'EXPIRED') }}</span>
+            <span><span class="badge bg-secondary">&nbsp;</span> {{ getStatusCountByPlan(plan.name, 'INACTIVE') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="subscriptionPlans.length === 0" class="text-center text-muted">
+        Aucune donnée de répartition.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+   <!-- ===== Modale Édition Plan (Bootstrap 5) ===== -->
+<div class="modal fade" tabindex="-1" #editModal data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" *ngIf="editModel">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ isCreate ? 'Nouveau plan' : 'Modifier le plan' }}</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeEdit()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Nom *</label>
+            <input class="form-control" [(ngModel)]="editModel.name" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Prix (€/mois) *</label>
+            <input class="form-control" type="number" min="0" step="1" [(ngModel)]="editModel.price" />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="editModel.description"></textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Employés max *</label>
+            <input class="form-control" type="number" [(ngModel)]="editModel.maxEmployees" />
+            <small class="text-muted">Utilise -1 pour illimité</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Sites max *</label>
+            <input class="form-control" type="number" [(ngModel)]="editModel.maxSites" />
+            <small class="text-muted">Utilise -1 pour illimité</small>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Durée (mois)</label>
+            <input class="form-control" type="number" min="1" [(ngModel)]="editModel.durationMonths" />
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="isActive" [(ngModel)]="editModel.isActive">
+              <label class="form-check-label" for="isActive">Actif</label>
             </div>
           </div>
         </div>
-      </ng-container>
+      </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" (click)="closeEdit()" [disabled]="saving">Annuler</button>
+          <button class="btn btn-primary" (click)="saveEdit()" [disabled]="saving">
+            <span *ngIf="!saving">{{ isCreate ? 'Créer' : 'Enregistrer' }}</span>
+            <span *ngIf="saving" class="spinner-border spinner-border-sm"></span>
+          </button>
+        </div>
     </div>
+  </div>
+</div>
+ 

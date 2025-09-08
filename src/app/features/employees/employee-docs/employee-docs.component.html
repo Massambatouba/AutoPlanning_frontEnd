@@ -1,0 +1,114 @@
+<div class="card shadow-sm mt-4">
+  <div class="card-header bg-secondary text-white">
+    <h3 class="mb-0">Documents requis</h3>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Pièce d'identité -->
+    <h5 class="mb-3">Pièce d'identité <span class="text-danger">*</span></h5>
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <div class="form-floating">
+          <select class="form-select" [(ngModel)]="idType" name="idType" required>
+            <option *ngFor="let k of identityKinds" [value]="k">{{ k }}</option>
+          </select>
+          <label>Type</label>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-floating">
+          <input class="form-control" [(ngModel)]="idNumber" name="idNumber" placeholder="Numéro" required />
+          <label>Numéro *</label>
+        </div>
+        <div class="form-text text-danger" *ngIf="showErrors && !idNumber.trim()">Requis.</div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-floating">
+          <input type="date" class="form-control" [(ngModel)]="idExpiresAt" name="idExpiresAt" required />
+          <label>Expiration *</label>
+        </div>
+        <div class="form-text text-danger" *ngIf="showErrors && !idExpiresAt">Requis.</div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Fichier (optionnel)</label>
+        <input type="file" class="form-control" (change)="onIdFileChange($event)" />
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Diplômes -->
+    <!-- Diplômes -->
+<div class="d-flex align-items-center justify-content-between mt-4">
+  <h5 class="mb-0">Diplômes / cartes pro <span class="text-danger">*</span></h5>
+  <small class="text-muted">Ajoutez au moins un diplôme</small>
+</div>
+
+<!-- plus de <form> imbriqué : juste une rangée et un bouton type="button" -->
+<div class="row g-3 align-items-end mt-2">
+  <div class="col-md-3">
+    <div class="form-floating">
+      <select class="form-select" [(ngModel)]="dipType" name="dipType" required>
+        <option *ngFor="let k of diplomaKinds" [value]="k">{{ k }}</option>
+      </select>
+      <label>Type</label>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="form-floating">
+      <input class="form-control" [(ngModel)]="dipNumber" name="dipNumber" placeholder="Numéro" />
+      <label>Numéro</label>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="form-floating">
+      <input type="date" class="form-control" [(ngModel)]="dipExpiresAt" name="dipExpiresAt" />
+      <label>Expiration</label>
+    </div>
+  </div>
+
+  <div class="col-md-2">
+    <label class="form-label">Fichier (opt.)</label>
+    <input type="file" class="form-control" (change)="onDipFileChange($event)" />
+  </div>
+
+  <!-- Bouton bien visible -->
+  <div class="col-md-1 col-12 d-grid">
+    <button class="btn btn-primary" type="button" (click)="addDiploma()">
+      Ajouter
+    </button>
+  </div>
+</div>
+
+<div class="form-text text-danger mt-2" *ngIf="showErrors && !diplomas.length">
+  Ajoutez au moins un diplôme.
+</div>
+
+<div class="table-responsive mt-3" *ngIf="diplomas.length">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Type</th><th>Numéro</th><th>Expiration</th><th>Fichier</th><th class="text-end"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let d of diplomas">
+        <td>{{ d.type }}</td>
+        <td>{{ d.number || '—' }}</td>
+        <td>{{ d.expiryDate || '—' }}</td>
+        <td>{{ d.file ? d.file.name : '—' }}</td>
+        <td class="text-end">
+          <button class="btn btn-outline-danger btn-sm" type="button" (click)="deleteDiploma(d)">
+            Supprimer
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -35,7 +35,7 @@
 /* ---------- tableau plan ------------------------------- */
 .schedule-table{width:100%;border-collapse:collapse}
 .schedule-table thead th,
-.schedule-table tbody td{font-size:.75rem;padding:.3rem .25rem;border:1px solid var(--border)}
+.schedule-table tbody td{font-size:.75rem; min-width: 72px;padding:.3rem .25rem;border:1px solid var(--border)}
 .schedule-table thead th{background:var(--surface-alt)}
 .legend-row th{background:var(--head);color:#fff}
 .legend-dispo{background:var(--dispo)!important;color:#fff}
@@ -46,19 +46,61 @@
   background:#fff;min-width:180px;text-align:left
 }
 
+/* les cases montent le contenu en haut */
+.schedule-table tbody td{ vertical-align: top; }
+
+
+.schedule-table td .slot{
+  display:block;             /* <- plus inline-flex */
+  width:100%;
+  min-height:22px;
+  margin-bottom:4px;         /* espace entre 2 vacations */
+  padding:0 .35rem;
+  border:1px solid var(--border);
+  border-radius:4px;
+  background:rgba(13,110,253,.08);
+  color:#0d6efd;
+  font-size:12px;
+  line-height:20px;          
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.schedule-table td .slot:last-child{ margin-bottom:0; }
+
+/* (tes couleurs par type restent) */
+.schedule-table td .slot[data-type="ADS"]{
+  border-color:#0d6efd; color:#0d6efd; background:rgba(13,110,253,.10);
+}
+.schedule-table td .slot[data-type="CHEF_DE_POSTE"]{
+  border-color:#f59f00; color:#f59f00; background:rgba(245,159,0,.10);
+}
+
+
+.schedule-table td .slot[data-type="ADS"] {
+  border-color: #0d6efd;
+  color: #0d6efd;
+  background: rgba(13,110,253,.10);
+}
+.schedule-table td .slot[data-type="CHEF_DE_POSTE"] {
+  border-color: #f59f00;
+  color: #f59f00;
+  background: rgba(245,159,0,.10);
+}
+
 .avatar{width:25px;height:25px;border-radius:50%;background:var(--brand);
   color:#fff;font-size:.65rem;display:inline-flex;align-items:center;justify-content:center;margin-right:.3rem}
 
 /* slots (= vacations) ---------------------------------- */
-.slot{
-  display:block;
-  margin-bottom:2px;
-  border:1px solid var(--border);
-  border-radius:.25rem;
-  padding:0 2px;
-  cursor:pointer;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
-}
+// .slot{
+//   display:block;
+//   margin-bottom:2px;
+//   border:1px solid var(--border);
+//   border-radius:.25rem;
+//   padding:0 2px;
+//   cursor:pointer;
+//   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+// }
 .slot:hover{background:var(--surface-alt)}
 [data-type="ADS"]{background:#e3f2fd;border-color:#2196f3}
 [data-type="CHEF_DE_POSTE"]{background:#fff3e0;border-color:#ff9800}
@@ -91,6 +133,16 @@
               &:hover { filter: brightness(.9); } }
 }
 
+/* le conteneur de la table devient scrollable en X */
+.plan-wrapper{
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  padding-bottom: .5rem;   /* laisse la place au scrollbar */
+}
+
+
 
 
 .slot-empty:hover{background:var(--surface-alt);color:var(--brand)}
@@ -109,7 +161,19 @@ td.gap,.slot-empty.gap{background:#ffebee;border-color:#e53935}
 
 /* responsive vite-fait ---------------------------------- */
 @media(max-width:992px){
-  .sticky-col{min-width:150px}
+  //.sticky-col{min-width:150px}
   .schedule-table thead th,
   .schedule-table tbody td{min-width:60px}
 }
+
+.missing-tip .tooltip-inner{
+  white-space: normal;     
+  text-align: left;
+  min-width: 240px;
+  padding: .5rem .75rem;
+  font-size: .85rem;
+}
+.missing-box ul li{ margin-bottom:.25rem; }
+.missing-box ul li:last-child{ margin-bottom:0; }
+
+
