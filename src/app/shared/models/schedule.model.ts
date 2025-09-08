@@ -206,6 +206,17 @@ export interface AssignmentDTO {
   absence?: boolean;
   absenceType?: string;
 }
+export interface ScheduleException {
+  id: number;
+  type: 'ADD' | 'CLOSE';           
+  startDate: string;              
+  endDate: string;              
+  daysOfWeek?: string[];           
+  agentType?: string;
+  startTime?: string;              
+  endTime?: string;                
+  requiredCount?: number;
+}
 
 
 
