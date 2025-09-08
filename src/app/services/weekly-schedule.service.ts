@@ -11,9 +11,10 @@ export class WeeklyScheduleService {
 
   constructor(private http: HttpClient) {}
 
-  defineWeeklyRule(siteId: number, rules: Partial<WeeklyScheduleRule>[]): Observable<WeeklyScheduleRule[]> {
-    return this.http.post<WeeklyScheduleRule[]>(`${environment.apiUrl}/sites/${siteId}/weekly-schedule-rule`, rules);
-  }
+defineWeeklyRule(siteId: number, rules: WeeklyScheduleRuleRequest[]) {
+  return this.http.post<WeeklyScheduleRule[]>(`${environment.apiUrl}/sites/${siteId}/weekly-schedule-rule`, rules);
+}
+
 
   // getWeeklyRules(siteId: number): Observable<WeeklyScheduleRule[]> {
   //   return this.http.get<WeeklyScheduleRule[]>(`${environment.apiUrl}/sites/${siteId}/weekly-schedule-rule`);

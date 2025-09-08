@@ -9,8 +9,13 @@
     <div class="title-group">
       <h1>{{ schedule.name }}</h1>
       <div class="meta">
-        {{ getMonthName(schedule.month) }} {{ schedule.year }} ·
-        {{ schedule.siteName }}
+        <div class="meta">
+          {{ getPeriodLabel() }} · {{ schedule?.siteName }}
+        </div>
+
+        <ng-template #monthlyMeta>
+          {{ getMonthName(schedule?.month) }} {{ schedule?.year }} · {{ schedule?.siteName }}
+        </ng-template>
       </div>
     </div>
   </div>
@@ -30,13 +35,14 @@
       Générer automatiquement
     </button>
 
-    
-  <!-- NOUVEAU : envoi groupé -->
-  <button class="btn primary" (click)="sendScheduleAll()"
-      [disabled]="sendingAll || !assignments.length || !canSendAll">
-    <span *ngIf="sendingAll" class="spinner-border spinner-border-sm me-1"></span>
-    <i class="bi bi-send"></i> Envoyer à tous
-  </button>
+
+    <!-- NOUVEAU : envoi groupé -->
+    <button class="btn primary" 
+        (click)="sendScheduleAll()"
+        [disabled]="sendingAll || !assignments.length || !canSendAll">
+      <span *ngIf="sendingAll" class="spinner-border spinner-border-sm me-1"></span>
+      <i class="bi bi-send"></i> Envoyer à tous
+    </button>
   </div>
 </nav>
 
@@ -56,6 +62,42 @@
     <div class="value">{{ formatHours(monthTotalMin) }}</div>
   </div>
 </section>
+
+<section class="card mt-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="m-0">Employés du site</h2>
+    <button class="btn btn-primary" (click)="showAssign = true">Affecter un employé</button>
+  </div>
+
+  <div *ngIf="empLoading" class="text-muted">Chargement…</div>
+  <div *ngIf="empError" class="alert alert-danger">{{ empError }}</div>
+
+  <ul class="list-group" *ngIf="!empLoading && siteEmployees.length">
+    <li class="list-group-item d-flex justify-content-between align-items-center"
+        *ngFor="let e of siteEmployees">
+      <div>
+        <strong>{{ e.lastName }} {{ e.firstName }}</strong>
+        <small class="text-muted ms-2">{{ e.email || '—' }}</small>
+      </div>
+      <div class="d-flex gap-1 flex-wrap">
+        <span class="badge bg-secondary" *ngFor="let t of e.agentTypes || []">{{ t }}</span>
+      </div>
+    </li>
+  </ul>
+
+  <p class="text-muted" *ngIf="!empLoading && !siteEmployees.length">
+    Aucun employé affecté à ce site.
+  </p>
+</section>
+
+<!-- Le modal -->
+<app-assign-employee-modal
+  *ngIf="showAssign"
+  [siteId]="siteId"
+  (closed)="showAssign = false"
+  (attached)="onEmployeeAttached($event)">
+</app-assign-employee-modal>
+
 
 <!-- heures par employé ───────────────────────────────────────────── -->
 <section class="card emp-hours" *ngIf="employees.length">
@@ -78,28 +120,131 @@
 </section>
 
 
+<ng-template #assignmentModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      {{ mode === 'add' ? 'Ajouter une vacation' : 'Modifier la vacation' }}
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+  </div>
+
+  <form [formGroup]="addForm" (ngSubmit)="submitModal()">
+    <div class="modal-body row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Site</label>
+        <select class="form-select" formControlName="siteId" required>
+          <option [ngValue]="null" disabled>Choisir...</option>
+        <option *ngIf="(schedule?.site?.id ?? schedule?.siteId) as sid"
+          [ngValue]="sid">
+          {{ schedule?.site?.name ?? schedule?.siteName }}
+        </option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-control" formControlName="date" required />
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Shift</label>
+        <select class="form-select" formControlName="shift">
+          <option value="MATIN">Matin</option>
+          <option value="JOUR">Jour</option>
+          <option value="SOIR">Soir</option>
+          <option value="NUIT">Nuit</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Début</label>
+        <input type="time" class="form-control" formControlName="startTime" required />
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Fin</label>
+        <input type="time" class="form-control" formControlName="endTime" required />
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Type d'agent</label>
+        <select class="form-select" formControlName="agentType" required>
+          <option value="ADS">ADS</option>
+          <option value="SSIAP1">SSIAP 1</option>
+          <option value="SSIAP2">SSIAP 2</option>
+          <option value="SSIAP3">SSIAP 3</option>
+          <option value="CHEF_DE_POSTE">Chef de poste</option>
+          <option value="CHEF_DE_EQUIPE">Chef d'équipe</option>
+          <option value="RONDE">Ronde</option>
+          <option value="ASTREINTE">Astreinte</option>
+          <option value="FORMATION">Formation</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Notes</label>
+        <input type="text" class="form-control" formControlName="notes" placeholder="Facultatif" />
+      </div>
+
+      <input type="hidden" formControlName="employeeId" />
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Annuler</button>
+
+      <button *ngIf="mode === 'edit'" type="button" class="btn btn-danger me-auto"
+              (click)="deleteFromModal()">
+        Supprimer
+      </button>
+
+      <button type="submit" class="btn btn-primary" [disabled]="addForm.invalid">
+        {{ mode === 'add' ? 'Ajouter' : 'Enregistrer' }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+
+
 <!-- tableau mensuel compact ───────────────────────────────────────── -->
 <div class="plan-wrapper" *ngIf="!loadingSchedule && schedule">
   <table class="schedule-table table table-bordered text-center">
-    <!-- ligne 0 : légende dispo / indispo -->
+   
 <thead>
   <!-- ligne couverture -->
   <tr class="legend-row">
     <th rowspan="2" class="sticky-col">Agents</th>
-
     <ng-container *ngFor="let d of dateKeys">
-      <th
-        [ngClass]="isCovered(d) ? 'bg-success text-white' : 'bg-danger text-white'"
-      >
-        <!-- ✓ si entièrement couvert -->
-        <ng-container *ngIf="isCovered(d); else ko">
-          <i class="bi bi-check-lg"></i>
-        </ng-container>
+  <th [ngClass]="isCovered(d) ? 'bg-success text-white' : 'bg-danger text-white'">
+    <span
+      class="d-inline-block px-1 fw-bold"
+      [ngbTooltip]="isCovered(d) ? null : missingTpl" 
+      container="body"
+      tooltipClass="missing-tip"
+      triggers="mouseenter:mouseleave">
+      <ng-container *ngIf="isCovered(d); else ko">
+        <i class="bi bi-check-lg"></i>
+      </ng-container>
+      <ng-template #ko>{{ getMissing(d) }}</ng-template>
+    </span>
 
-        <!-- sinon le nb manquant -->
-        <ng-template #ko>{{ getMissing(d) }}</ng-template>
-      </th>
-    </ng-container>
+    <!-- template DU JOUR courant, on utilise 'd' directement -->
+    <ng-template #missingTpl>
+      <div class="missing-box">
+        <div class="fw-semibold mb-1">Vacations manquantes</div>
+        <ul class="mb-0 ps-3">
+          <li *ngFor="let it of (missingDetails[d] || [])">
+            <span class="badge me-1" [ngClass]="badgeClass(it.agentType)">
+              {{ labelFor(it.agentType) }}
+            </span>
+            {{ it.startTime }}–{{ it.endTime }} : <strong>{{ it.missing }}</strong>
+          </li>
+        </ul>
+      </div>
+    </ng-template>
+  </th>
+</ng-container>
+
   </tr>
 
   <!-- ligne jour + n° -->
@@ -107,11 +252,12 @@
     <ng-container *ngFor="let d of dateKeys">
       <th>
         <div class="dow">{{ dayNames[d] }}</div>
-        <div class="num">{{ d | date:'dd' }}</div>
+        <div class="num">{{ dayNum(d) }}</div>
       </th>
     </ng-container>
   </tr>
 </thead>
+
 
 
 
@@ -125,25 +271,27 @@
 
         <!-- 1 case = 1 jour -->
         <ng-container *ngFor="let d of dateKeys">
-          <td
-            [ngClass]="{gap:isGap(d)}"
-            (dblclick)="openAddModal(d, emp.id)"
-          >
-            <!-- vacations existantes -->
-            <ng-container *ngIf="assignMap[emp.id][d].length; else empty">
-              <div *ngFor="let a of assignMap[emp.id][d]"
-                   class="slot"
-                   [attr.data-type]="a.agentType"
-                   (click)="openEditModal(a,$event)">
-                {{ a.startTime }}-{{ a.endTime }}
-              </div>
-            </ng-container>
+         <td [ngClass]="{gap:isGap(d)}">
+          <ng-container *ngIf="cellAssignments(emp.id, d).length; else empty">
+            <div
+              *ngFor="let a of cellAssignments(emp.id, d)"
+              class="slot"
+              [attr.data-type]="a.agentType"
+              [attr.title]="(a.startTime || '').slice(0,5) + ' - ' + (a.endTime || '').slice(0,5)"
+              (click)="openEditModal(a, $event)"
+            >
+              {{ (a.startTime || '').slice(0,5) }}-{{ (a.endTime || '').slice(0,5) }}
+            </div>
+          </ng-container>
 
-            <!-- case vide -->
-            <ng-template #empty>
-              <button class="slot-empty" [ngClass]="{'gap':isGap(d)}">+</button>
-            </ng-template>
-          </td>
+          <ng-template #empty>
+            <button class="slot-empty" [ngClass]="{'gap':isGap(d)}"
+                    (click)="openAddModal(d, emp.id)">+  <!-- Ouvre la modale d’ajout -->
+            </button>
+          </ng-template>
+        </td>
+
+
         </ng-container>
       </tr>
     </tbody>
@@ -164,3 +312,5 @@
   </div>
 </div>
 </div>
+
+

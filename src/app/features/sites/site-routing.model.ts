@@ -34,6 +34,12 @@ export const SITES_ROUTES: Routes = [
     path: ':siteId/weekly-rules/:templateId/edit',
     loadComponent: () => import('./weekly-schedule/weekly-edit/weekly-edit.component')
     .then(m => m.WeeklyEditComponent)
+},
+{
+    path: ':siteId/exceptions',
+    loadComponent: () =>
+      import('./weekly-exceptions/weekly-exceptions/weekly-exceptions.component')
+        .then(m => m.WeeklyExceptionsComponent)
 }
 ];
 

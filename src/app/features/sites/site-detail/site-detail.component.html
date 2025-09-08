@@ -8,6 +8,20 @@
       <h1>{{ site.name }}</h1>
     </div>
 
+    <!-- Bouton dans l’en-tête -->
+    <button class="btn btn-primary" (click)="showAssign = true">
+      Affecter un employé
+    </button>
+
+    <!-- Le modal -->
+    <app-assign-employee-modal
+      *ngIf="showAssign"
+      [siteId]="site?.id ?? siteId"
+      (closed)="showAssign = false"
+      (attached)="onEmployeeAttached($event)">
+    </app-assign-employee-modal>
+
+
     <div class="header-actions">
       <button
         class="btn btn-outline"

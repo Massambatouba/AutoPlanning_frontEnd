@@ -21,15 +21,22 @@ export interface WeeklyScheduleRule {
   description?: string;
 }
 
-// weekly-schedule-rule-request.model.ts
+export type weeklyDay =
+| 'MONDAY' | 'TUESDAY' | 'WEDNESDAY'
+| 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+
+export type agentKind = 
+| 'ADS' | 'SSIAP1' | 'SSIAP2' | 'SSIAP3' 
+| 'CHEF_DE_POSTE' | 'CHEF_DE_EQUIPE' | 'RONDE' | 'ASTREINTE' | 'FORMATION';
+
 export interface WeeklyScheduleRuleRequest {
   name: string;
-  dayOfWeek: string; 
+  dayOfWeek: string;
   description?: string;
   agents: {
-    agentType: string;     
-    startTime: string;        
-    endTime: string;          
+    agentType: string;
+    startTime: string;
+    endTime: string;
     requiredCount: number;
     notes?: string;
   }[];

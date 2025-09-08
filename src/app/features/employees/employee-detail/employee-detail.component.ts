@@ -1,24 +1,28 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { firstValueFrom, Subscription } from 'rxjs';
+
 import { EmployeeService } from 'src/app/services/employee.service';
 import { CompanyService } from 'src/app/services/company.service';
+import { AssignmentService } from 'src/app/services/assignment.service';
+import { ScheduleService } from 'src/app/services/schedule.service';
+
 import {
   Employee,
   EmployeePlanningDTO,
-  AssignmentDTO
+  EmployeeAssignmentDTO
 } from 'src/app/shared/models/employee.model';
 import { Company } from 'src/app/shared/models/company.model';
 import { EmployeeRoutingModule } from '../employee-routing.model';
-import { AssignmentService } from 'src/app/services/assignment.service';
-import { Schedule, ScheduleAssignmentRequest } from 'src/app/shared/models/schedule.model';
+import { CompanyRoutingModule } from '../../company/company-routing.module';
 import { AgentTypeAbbreviationPipe } from 'src/app/pipes/agent-type-abbreviation.pipe';
 import { AbsenceTypeAbbreviationPipe } from 'src/app/pipes/absence-type-abbreviation.pipe';
 import { Site } from 'src/app/shared/models/site.model';
-import { Subscription } from 'rxjs';
-import { CompanyRoutingModule } from '../../company/company-routing.module';
-import { ScheduleService } from 'src/app/services/schedule.service';
+import { ScheduleAssignmentRequest } from 'src/app/shared/models/schedule.model';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { EmployeeMonthlyPlanningDTO, EmployeeMonthlySummary } from 'src/app/shared/models/employee-planning-agg.model';
 
 @Component({
   standalone: true,
@@ -40,27 +44,38 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   employee: Employee | null = null;
   loading = true;
   allSites: Site[] = [];
-  employeePlanning: EmployeePlanningDTO | null = null;
+  viewMode: 'classic' | 'aggegated' = 'classic';
+
+  private siteIdByName = new Map<string, number>();
+
+  // peut être un planning classique (1 schedule) ou agrégé (multi-sites)
+  employeePlanning: EmployeePlanningDTO | EmployeeMonthlyPlanningDTO | null = null;
+
   error = '';
-  scheduleId!: number;
-  editingAssignment: AssignmentDTO | null = null;
+  // Schedule utilisé UNIQUEMENT pour le mode classique (envoi au salarié)
+  scheduleId: number | null = null;
 
-    // modes to add or delete
-  mode!: 'none' | 'add' | 'delete' | 'edit';
+  // mapping siteId -> scheduleId pour le mode agrégé
+  private scheduleIdBySiteId = new Map<number, number>();
 
-  private sub!: Subscription;
+  editingAssignment: EmployeeAssignmentDTO | null = null;
 
-   sending = false; 
+  @ViewChild('assignmentModal') assignmentModal!: TemplateRef<any>;
+  private modalRef?: NgbModalRef | null = null;
+
+  mode: 'none' | 'add' | 'delete' | 'edit' = 'none';
+  private sub?: Subscription;
+
+  sending = false;
 
   selectedDateKey: string = '';
   selectedSiteName: string = '';
 
-
+  months: EmployeeMonthlySummary[] = [];
+  selectedMonth = { month: new Date().getMonth() + 1, year: new Date().getFullYear() };
 
   showAddForm = false;
   addForm!: FormGroup;
-  private pendingDateKey = '';
-  schedule!: Schedule;
 
   totalOrdinaryMin = 0;   // heures semaine hors nuit
   totalNightMin = 0;      // heures de nuit (21h–5h)
@@ -68,28 +83,35 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   totalHolidayMin = 0;    // heures jours fériés officiels
   dailyTotalMin: number[] = [];
 
-  selectedAssignment: AssignmentDTO | null = null;
+  selectedAssignment: EmployeeAssignmentDTO | null = null;
 
-
-  // URL du logo (peut être null si non défini)
   companyLogoUrl: string | null = null;
   printMode = false;
 
-  // On stocke mois/année du planning pour générer tous les jours
-  planningMonth: number = 0; // de 1 à 12
+  // --- Type guards ---
+  private isClassic(p: any): p is EmployeePlanningDTO {
+    return !!p && 'scheduleId' in p;
+  }
+  private reloadCurrent() {
+    this.loadMonth(this.planningMonth, this.planningYear);
+  }
+  private isAggregated(p: any): p is EmployeeMonthlyPlanningDTO {
+    return !!p && 'schedules' in p && Array.isArray(p.schedules);
+  }
+
+  // Axe calendrier (mois/année en cours)
+  planningMonth: number = 0; // 1..12
   planningYear: number = 0;  // ex. 2025
 
-  // Propriétés pour le tableau du planning (grille)
-  tableDates: Date[] = [];                      // Liste des Date JS pour chaque jour du mois
-  tableDateKeys: string[] = [];                 // Liste des clefs ISO ("YYYY-MM-DD")
-  dayInitials: string[] = [];                   // Initiale du jour en français pour chaque date
-  siteList: string[] = [];                      // Tous les sites uniques dans le mois
-  assignmentsMap: {                             // assignmentsMap[siteName][dateKey] = AssignmentDTO[]
-    [siteName: string]: { [dateKey: string]: AssignmentDTO[] };
+  // Grille planning
+  tableDates: Date[] = [];
+  tableDateKeys: string[] = [];
+  dayInitials: string[] = [];
+  siteList: string[] = [];
+  assignmentsMap: {
+    [siteName: string]: { [dateKey: string]: EmployeeAssignmentDTO[] };
   } = {};
 
-
-  // Ensemble des clefs ISO "YYYY-MM-DD" correspondant aux jours fériés FR pour l'année du planning
   holidayKeys: Set<string> = new Set<string>();
 
   contractTypes = {
@@ -105,210 +127,123 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     private employeeService: EmployeeService,
     private scheduleSrv: ScheduleService,
     private companyService: CompanyService,
+    private modalService: NgbModal,
     private assignmentService: AssignmentService
   ) {}
 
   ngOnInit(): void {
-
-     /** 1) sommes-nous en print ?  */
+    // 1) mode impression ?
     this.printMode = this.route.snapshot.data['printMode'] === true;
 
-    /** 2) si print → on récupère scheduleId depuis ?schedule= */
+    // 2) si print : récupère ?schedule=
     if (this.printMode) {
-      this.scheduleId = Number(this.route.snapshot.queryParamMap.get('schedule'));
+      const q = this.route.snapshot.queryParamMap.get('schedule');
+      this.scheduleId = q ? Number(q) : null;
     }
 
-    /** 3) charge l’employé comme avant */
+    // 3) charge employé
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.initAddForm();
     this.loadEmployee(id);
 
-    /** 4) dès que le planning est prêt on lance l’impression */
+    // 4) imprime quand les données sont prêtes
     if (this.printMode) {
-      // on attend que loadPlanning() finisse : petit setTimeout suffit
       setTimeout(() => window.print(), 1000);
     }
 
-    // const id1 = Number(this.route.snapshot.paramMap.get('id1'));
-    // const idParam = this.route.snapshot.paramMap.get('id1');
-    // this.initAddForm();
-    // this.loadEmployee(id1);
-
+    // refresh via bus cross-écran (ajout/suppression)
     this.sub = this.assignmentService.refresh$
-    .subscribe(() => this.loadPlanning());
-
-    // setTimeout(() => {
-    //   this.showAddForm = true;
-    // }, 2000);
-
-
+      .subscribe(() => this.loadPlanning());
   }
 
   ngOnDestroy() {
-  this.sub?.unsubscribe();
+    this.sub?.unsubscribe();
   }
 
-getSiteByName(name: string): Site | undefined {
-  const result = this.allSites?.find(s => s.name === name);
-  console.log('[getSiteByName]', name, result);
-  return result;
-}
+  // --------- Chargements ----------
 
-sendToEmployee(empId: number) {
-  if (!this.scheduleId) {                     // ← on vérifie l’ID, pas l’objet
-    alert('Planning non chargé');
-    return;
+  loadMonths(year = this.selectedMonth.year) {
+    if (!this.employee) return;
+    this.employeeService
+      .listMonthlyPlanningSummaries(this.employee.id, year)
+      .subscribe(list => this.months = list.sort((a, b) => a.month - b.month));
   }
+  loadMonth(m: number, y: number) {
+    if (this.viewMode === 'classic') {
+      this.loadClassicPlanning(m, y);
+    } else {
+      this.loadAggregatedPlanning(m, y);
+    }
+  }
+   
+  private loadClassicPlanning(m: number, y: number) {
+    if (!this.employee) return;
+    this.planningMonth = m;
+    this.planningYear  = y;
 
-  this.sending = true;
+    // jours fériés pour l’année demandée
+    this.holidayKeys = new Set(this.getFrenchHolidays(y));
 
-  this.scheduleSrv
-      .sendScheduleToEmployee(this.scheduleId, empId)   // ← id, pas objet
+    this.employeeService
+      .getMonthlyPlanning(this.employee.id, m, y)
       .subscribe({
-        next : ()  => {
-          this.sending = false;
-          alert('Planning envoyé ✔︎');
+        next: (data) => {
+          this.employeePlanning = data;
+          this.scheduleId = this.isClassic(data) ? data.scheduleId : null;
+          this.scheduleIdBySiteId.clear(); // pas utile en classique
+          this.prepareTable();
+          if (this.printMode) window.print();
         },
-        error: err => {
-          this.sending = false;
-          alert('Erreur d’envoi : ' + (err.error?.message || err.message));
-        }
+        error: (err) => console.error('Erreur chargement planning (classique)', err)
       });
-}
-
-
-
-
-  private initAddForm(): void {
-    this.addForm = this.fb.group({
-      siteName: [''],
-      siteId: ['', Validators.required],
-      date: ['', Validators.required],
-      shift: ['', Validators.required],
-      agentType: ['', Validators.required],
-      adress : ['', Validators.required],
-      zipCode: [''],
-      city   : [''],
-      country: [''],
-      notes: [''],
-      employeeId: ['', Validators.required],
-      startTime: ['', [Validators.required, Validators.pattern(/^[0-2]\d:[0-5]\d$/)]],
-      endTime: ['', [Validators.required, Validators.pattern(/^[0-2]\d:[0-5]\d$/)]]
-    });
   }
 
 
+  loadAggregatedPlanning(m: number, y: number) {
+    if (!this.employee) return;
 
-  private computeSummary(): void {
-    this.totalOrdinaryMin = 0;
-    this.totalNightMin = 0;
-    this.totalSundayMin = 0;
-    this.totalHolidayMin = 0;
+    this.planningMonth = m;
+    this.planningYear  = y;
+    this.selectedMonth = { month: m, year: y };
 
-    this.siteList.forEach(siteName => {
-      this.tableDateKeys.forEach((dateKey, idx) => {
-        const d = this.tableDates[idx];
-        const isSun = d.getDay() === 0;  // 0 = dimanche
-        const isHol = this.isHoliday(dateKey);
+    this.holidayKeys = new Set(this.getFrenchHolidays(y));
 
-        this.assignmentsMap[siteName][dateKey].forEach(a => {
-           if (a.isAbsence || !a.startTime || !a.endTime) return;
-          // parse heures
-          const [sh, sm] = a.startTime.split(':').map(Number);
-          let [eh, em] = a.endTime.split(':').map(Number);
-          let startMin = sh * 60 + sm;
-          let endMin = eh * 60 + em;
-          if (endMin < startMin) endMin += 24 * 60;
-          const duration = endMin - startMin;
+    this.employeeService
+      .getAggregatedMonthlyPlanning(this.employee.id, m, y)
+      .subscribe(dto => {
+        this.employeePlanning = dto;
 
-          // calcul des heures de nuit
-          let night = 0;
-          // portion 21h–24h
-          const startN1 = 21*60, endN1 = 24*60;
-          night += Math.max(0, Math.min(endMin, endN1) - Math.max(startMin, startN1));
-          // portion 0–5h
-          const startN2 = 24*60, endN2 = 30*60;
-          night += Math.max(0, Math.min(endMin, endN2) - Math.max(startMin, startN2));
+        this.scheduleIdBySiteId =
+          new Map(dto.schedules.map(s => [s.siteId, s.scheduleId]));
 
-          // affectation selon jour
-          if (isSun) {
-            this.totalSundayMin += duration;
-          } else if (isHol) {
-            this.totalHolidayMin += duration;
-          } else {
-            // semaine non fériée, heures normales hors nuit
-            this.totalOrdinaryMin += (duration - night);
-          }
-          // les heures de nuit sont toujours comptées
-          this.totalNightMin += night;
-        });
+        this.scheduleId = null; // pas d’envoi en mode agrégé
+        this.prepareTable();
       });
-    });
   }
-
-
-  private computeDailyTotals(): void {
-  // initialisation à zéro pour chaque jour
-  this.dailyTotalMin = this.tableDateKeys.map(_ => 0);
-
-  this.siteList.forEach(siteName => {
-    this.tableDateKeys.forEach((dateKey, idx) => {
-      const assigns = this.assignmentsMap[siteName][dateKey] || [];
-      assigns.forEach(a => {
-        // calcul duration en minutes
-        if (a.isAbsence || !a.startTime || !a.endTime) return;
-        const [sh, sm] = a.startTime.split(':').map(Number);
-        let [eh, em] = a.endTime.split(':').map(Number);
-        let startMin = sh * 60 + sm;
-        let endMin   = eh * 60 + em;
-        if (endMin < startMin) endMin += 24*60;
-        this.dailyTotalMin[idx] += endMin - startMin;
-      });
-    });
-  });
-}
-
-
-  formatMinutesToHours(mins: number): string {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return m
-      ? `${h}h${m.toString().padStart(2, '0')}`
-      : `${h}h`;
-  }
-
-   /**
-   * Optionnel : calculer sur un a. Peut s'appeler en template si besoin.
-   */
-getDuration(a: AssignmentDTO): string {
-  if (a.isAbsence || !a.startTime || !a.endTime) return 'a.absenceType | absenceAbbreviation'; // Ne rien afficher pour les absences
-  const [sh, sm] = a.startTime.split(':').map(Number);
-  let [eh, em] = a.endTime.split(':').map(Number);
-  let startMin = sh * 60 + sm;
-  let endMin = eh * 60 + em;
-  if (endMin < startMin) endMin += 24 * 60;
-  return this.formatMinutesToHours(endMin - startMin);
-}
-
 
   private loadEmployee(id: number): void {
     this.employeeService.getEmployeeById(id).subscribe({
       next: (employee) => {
         this.employee = employee;
-        console.log('📍 allSites:', this.allSites);
+
         if (employee.companyId) {
           this.companyService.getMyCompany().subscribe({
             next: (company: Company) => {
               this.allSites = company.sites ?? [];
               this.companyLogoUrl = company.logoUrl ?? null;
             },
-            error: (err) => {
-              console.error('Impossible de charger la compagnie', err);
-            }
+            error: (err) => console.error('Impossible de charger la compagnie', err)
           });
         }
+
         this.loading = false;
-        this.loadPlanning();
+
+        // charge le mois courant (classique par défaut)
+        const now = new Date();
+        this.loadClassicPlanning(now.getMonth() + 1, now.getFullYear());
+
+        // charge les “pastilles” de mois de l’année sélectionnée
+        this.loadMonths(this.selectedMonth.year);
       },
       error: (error) => {
         this.error = error.message;
@@ -317,22 +252,39 @@ getDuration(a: AssignmentDTO): string {
     });
   }
 
+
+  onYearChange(y: number) {
+    this.selectedMonth.year = +y;
+    this.loadMonths(this.selectedMonth.year);
+  }
+  monthName(n: number) {
+    return ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'][n-1] || '';
+  }
+
   loadPlanning(): void {
     if (!this.employee) return;
-    const { id } = this.employee;
-    // On prend la date courante pour déterminer mois/année
+
+    // mois/année courants
     const now = new Date();
-    this.planningMonth = now.getMonth() + 1; // de 1 à 12
+    this.planningMonth = now.getMonth() + 1;
     this.planningYear = now.getFullYear();
 
-    // Calculer les jours fériés FR pour cette année
+    // jours fériés FR de l'année
     this.holidayKeys = new Set(this.getFrenchHolidays(this.planningYear));
 
+    // ici on charge la version "classique" (un seul schedule)
     this.employeeService
       .getMonthlyPlanning(this.employee.id, this.planningMonth, this.planningYear)
       .subscribe({
         next: (data) => {
           this.employeePlanning = data;
+
+          // en mode classique, on a bien un scheduleId global
+          this.scheduleId = this.isClassic(data) ? data.scheduleId : null;
+
+          // reset mapping (pas utile en mode classique)
+          this.scheduleIdBySiteId.clear();
+
           this.prepareTable();
           if (this.printMode) window.print();
         },
@@ -342,61 +294,46 @@ getDuration(a: AssignmentDTO): string {
       });
   }
 
-    /** Toggle modes */
-  toggleAddMode() { this.mode = this.mode === 'add' ? 'none' : 'add'; }
-  toggleDeleteMode() { this.mode = this.mode === 'delete' ? 'none' : 'delete'; }
+  // --------- Utilitaires de type / mapping ----------
 
-  /** Click on empty cell */
-cellClicked(siteName: string, dateKey: string) {
-  if (!this.employeePlanning) {
-    console.warn('⚠️ planning pas encore prêt, ignore clic');
-    return;
+private getScheduleIdForSiteId(siteId?: number | null): number | undefined {
+  if (!this.employeePlanning) return undefined;
+  if (this.isClassic(this.employeePlanning)) return this.employeePlanning.scheduleId;
+  if (this.isAggregated(this.employeePlanning) && siteId != null) {
+    return this.scheduleIdBySiteId.get(siteId);
   }
-  this.editingAssignment = null; // reset
-  this.showAddForm = true;
-
-  const site = this.getSiteByName(siteName);
-
-this.addForm.patchValue({
-  siteName: site?.name,
-  siteId: site?.id,
-  date: dateKey,
-  shift: '',
-  startTime: '',
-  endTime: '',
-  agentType: '',
-  employeeId: this.employee?.id,
-  notes: ''
-});
-  this.mode = 'add';
+  return undefined;
 }
 
+  getSiteByName(name?: string): Site | undefined {
+    if (!name) return undefined;
+    return this.allSites?.find(s => s.name === name);
+  }
 
-  /** Click on assignment */
-assignmentClicked(assignment: AssignmentDTO, dateKey: string, event: MouseEvent) {
-  event.stopPropagation(); // éviter de déclencher `cellClicked`
+  // --------- Actions haut de page ----------
 
-  this.editingAssignment = assignment;
-  this.showAddForm = true;
+  sendToEmployee(empId: number) {
+    // on autorise uniquement en mode classique (un seul scheduleId)
+    if (!this.scheduleId) {
+      alert('Envoi indisponible : ce mois regroupe plusieurs plannings (ou planning non chargé).');
+      return;
+    }
 
-  const site = this.getSiteByName(assignment.siteName);
+    this.sending = true;
 
-this.addForm.patchValue({
-  siteName: site?.name,
-  siteId: site?.id,
-  date: dateKey,
-  shift: assignment.shift || '',
-  startTime: assignment.startTime?.slice(0, 5),
-  endTime: assignment.endTime?.slice(0, 5),
-  agentType: assignment.agentType,
-  employeeId: this.employee?.id
-});
-
-
-  this.mode = 'edit';
-}
-
-
+    this.scheduleSrv
+      .sendScheduleToEmployee(this.scheduleId, empId)
+      .subscribe({
+        next: () => {
+          this.sending = false;
+          alert('Planning envoyé ✔︎');
+        },
+        error: err => {
+          this.sending = false;
+          alert('Erreur d’envoi : ' + (err.error?.message || err.message));
+        }
+      });
+  }
 
   toggleEmployeeStatus(): void {
     if (!this.employee) return;
@@ -410,52 +347,256 @@ this.addForm.patchValue({
     });
   }
 
-  /**
-   * Méthode utilisée dans le template pour afficher le mois en toutes lettres.
-   */
+  // --------- Modale Add/Edit ----------
+
+  private initAddForm(): void {
+    this.addForm = this.fb.group({
+      siteId:    [null, Validators.required],
+      date:      ['',  Validators.required],
+      shift:     ['MATIN', Validators.required],
+      startTime: ['',  [Validators.required, Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d$/)]],
+      endTime:   ['',  [Validators.required, Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d$/)]],
+      agentType: ['ADS', Validators.required],
+      notes:     [''],
+      employeeId:[null, Validators.required],
+    });
+  }
+
+  cellClicked(siteName: string, dateKey: string) {
+    if (!this.employee || !this.employeePlanning) return;
+
+    const site = this.getSiteByName(siteName);
+
+    this.mode = 'add';
+    this.editingAssignment = null;
+
+    this.addForm.reset({
+      siteId:    site?.id ?? null,
+      date:      dateKey,
+      shift:     'MATIN',
+      startTime: '',
+      endTime:   '',
+      agentType: 'ADS',
+      notes:     '',
+      employeeId: this.employee.id
+    });
+
+    this.openModal();
+  }
+
+  assignmentClicked(a: EmployeeAssignmentDTO, dateKey: string, ev: MouseEvent) {
+    ev.stopPropagation();
+    if (!this.employee?.id) return;
+
+    if (a.isAbsence) {
+      alert('Cette entrée est une absence ; modification directe désactivée ici.');
+      return;
+    }
+
+    const site = this.getSiteByName(a.siteName);
+
+    this.mode = 'edit';
+    this.editingAssignment = a;
+
+    this.addForm.reset({
+      siteId:    site?.id ?? null,
+      date:      dateKey,
+      shift:     a.shift || 'MATIN',
+      startTime: a.startTime?.slice(0,5) ?? '',
+      endTime:   a.endTime?.slice(0,5) ?? '',
+      agentType: a.agentType ?? 'ADS',
+      notes:     a.notes ?? '',
+      employeeId: this.employee.id
+    });
+
+    this.openModal();
+  }
+
+  private openModal() {
+    this.modalRef = this.modalService.open(this.assignmentModal, {
+      centered: true,
+      backdrop: 'static',
+      size: 'lg'
+    });
+  }
+
+  closeModal() {
+    this.modalRef?.close();
+    this.modalRef = null;
+  }
+
+async submitModal() {
+  if (!this.employeePlanning || !this.employee?.id) return;
+  if (this.addForm.invalid) return;
+
+  const fv = this.addForm.value as ScheduleAssignmentRequest;
+  const siteId = Number(fv.siteId);
+
+  let scheduleId = this.getScheduleIdForSiteId(siteId);
+
+  // 🔁 fallback : créer/rafraîchir si absent
+  if (!scheduleId) {
+    try {
+      const req = {
+        siteId,
+        periodType: 'MONTH',
+        month: this.planningMonth,
+        year: this.planningYear
+      } as any; // interface de ton backend
+
+      const created = await firstValueFrom(this.scheduleSrv.createOrRefresh(req));
+      scheduleId = created.id;
+
+      // mets à jour le mapping
+      if (this.isAggregated(this.employeePlanning)) {
+        this.scheduleIdBySiteId.set(siteId, scheduleId);
+      } else {
+        this.scheduleId = scheduleId;
+      }
+    } catch (e: any) {
+      alert('Planning introuvable pour ce site/mois et impossible de le créer.\n' +
+            (e?.error?.message || e?.message || ''));
+      return;
+    }
+  }
+
+  const payload: ScheduleAssignmentRequest = {
+    siteId,
+    employeeId: this.employee.id,
+    date:       fv.date,
+    startTime:  fv.startTime,
+    endTime:    fv.endTime,
+    shift:      fv.shift || null as any,
+    agentType:  fv.agentType || null as any,
+    notes:      fv.notes || null as any
+  };
+
+  if (this.mode === 'add') {
+    this.assignmentService.addAssignment(scheduleId!, payload).subscribe({
+      next: () => { this.closeModal(); this.loadPlanning(); },
+      error: (err) => alert('Erreur création : ' + (err.error?.message || err.message))
+    });
+  } else if (this.mode === 'edit' && this.editingAssignment) {
+    this.assignmentService.updateAssignment(scheduleId!, this.editingAssignment.id, payload).subscribe({
+      next: () => { this.closeModal(); this.loadPlanning(); },
+      error: (err) => alert('Erreur modification : ' + (err.error?.message || err.message))
+    });
+  }
+}
+
+
+  deleteFromModal() {
+    if (!this.employeePlanning || !this.editingAssignment) return;
+
+    const site = this.getSiteByName(this.editingAssignment.siteName);
+    const scheduleId = this.getScheduleIdForSiteId(site?.id);
+    if (!scheduleId) { alert('Planning introuvable pour ce site/mois.'); return; }
+    if (!confirm('Supprimer cette vacation ?')) return;
+
+    this.assignmentService.deleteAssignment(scheduleId, this.editingAssignment.id).subscribe({
+      next: () => { this.closeModal(); this.loadPlanning(); },
+      error: (err) => alert('Erreur suppression : ' + (err.error?.message || err.message))
+    });
+  }
+
+  // --------- Anciennes méthodes overlay (si utilisées ailleurs) ----------
+
+  createAssignment(formValue: any) {
+    // détermine le scheduleId à partir du site choisi
+    const scheduleId = this.getScheduleIdForSiteId(Number(formValue.siteId));
+    if (!scheduleId) {
+      console.error('❌ Planning ID manquant');
+      alert('Impossible de créer : planning non chargé.');
+      return;
+    }
+
+    const payload: ScheduleAssignmentRequest = {
+      siteId:     Number(formValue.siteId),
+      employeeId: this.employee!.id,
+      date:       formValue.date,
+      startTime:  formValue.startTime,
+      endTime:    formValue.endTime,
+      agentType:  formValue.agentType,
+      notes:      formValue.notes || null,
+      shift:      formValue.shift || null,
+    };
+
+    this.assignmentService.addAssignment(scheduleId, payload).subscribe({
+      next: () => this.loadPlanning(),
+      error: (err) => console.error('Erreur lors de la création :', err)
+    });
+  }
+
+  updateAssignment(id: number, formValue: any) {
+    const scheduleId = this.getScheduleIdForSiteId(Number(formValue.siteId));
+    if (!scheduleId || !this.employee) {
+      alert('Impossible de modifier : planning ou employé manquant.');
+      return;
+    }
+
+    const payload: ScheduleAssignmentRequest = {
+      siteId:     Number(formValue.siteId),
+      employeeId: this.employee.id,
+      date:       formValue.date,
+      startTime:  formValue.startTime,
+      endTime:    formValue.endTime,
+      agentType:  formValue.agentType,
+      notes:      formValue.notes || null,
+      shift:      formValue.shift || null,
+    };
+
+    this.assignmentService.updateAssignment(scheduleId, id, payload).subscribe({
+      next: () => this.loadPlanning(),
+      error: (err) => alert('Erreur modification : ' + (err.error?.message || err.message))
+    });
+  }
+
+  onAddAssignment() {
+    if (!this.employee) return;
+    const formValue = this.addForm.value;
+    const payload = { ...formValue, employeeId: this.employee.id };
+
+    if (this.editingAssignment) {
+      this.updateAssignment(this.editingAssignment.id, payload);
+    } else {
+      this.createAssignment(payload);
+    }
+
+    this.showAddForm = false;
+    this.editingAssignment = null;
+  }
+
+  // --------- Affichages / calculs ----------
+
   currentMonthFullName(): string {
-    // On génère à partir de planningYear/planningMonth pour être cohérent
     const date = new Date(this.planningYear, this.planningMonth - 1, 1);
     return date.toLocaleString('fr-FR', { month: 'long' });
   }
 
-  /**
-   * Getter pour l’année (utilisé dans le template).
-   */
   get currentYear(): number {
     return this.planningYear;
   }
 
-  /**
-   * Vérifie si un objet Date tombe un samedi (6) ou dimanche (0).
-   */
   isWeekend(d: Date): boolean {
-    const dayNum = d.getDay(); // 0 = Dimanche, 6 = Samedi
+    const dayNum = d.getDay();
     return dayNum === 0 || dayNum === 6;
   }
 
-  /**
-   * Vérifie si la date (au format "YYYY-MM-DD") est un jour férié.
-   */
   isHoliday(dateKey: string): boolean {
     return this.holidayKeys.has(dateKey);
   }
 
-  /**
-   * Construit toutes les données nécessaires à l'affichage du planning en grille,
-   * y compris les jours sans affectation.
-   */
-private prepareTable(): void {
+  private prepareTable(): void {
     if (!this.employeePlanning) return;
 
-    // 1) Toutes les dates 1→dernier jour
+    // 1) Jours du mois
     const daysInMonth = new Date(this.planningYear, this.planningMonth, 0).getDate();
     this.tableDates = [];
     this.tableDateKeys = [];
     for (let d = 1; d <= daysInMonth; d++) {
       this.tableDates.push(new Date(this.planningYear, this.planningMonth - 1, d));
-      const mm = String(this.planningMonth).padStart(2,'0'),
-            dd = String(d).padStart(2,'0');
+      const mm = String(this.planningMonth).padStart(2,'0');
+      const dd = String(d).padStart(2,'0');
       this.tableDateKeys.push(`${this.planningYear}-${mm}-${dd}`);
     }
 
@@ -464,7 +605,7 @@ private prepareTable(): void {
       date.toLocaleDateString('fr-FR',{weekday:'long'}).charAt(0).toUpperCase()
     );
 
-    // 3) Liste des sites
+    // 3) Liste des sites (à partir du calendrier)
     const sites = new Set<string>();
     Object.values(this.employeePlanning.calendar).forEach(arr =>
       arr.forEach(a => sites.add(a.siteName))
@@ -480,171 +621,151 @@ private prepareTable(): void {
         this.assignmentsMap[site][key] = allOnDate.filter(a => a.siteName === site);
       });
     });
-     this.scheduleId = this.employeePlanning!.scheduleId;
-     console.log('✅ Schedule ID chargé :', this.scheduleId);
+
     // 5) Totaux
     this.computeSummary();
     this.computeDailyTotals();
   }
 
-createAssignment(formValue: any) {
-  console.log('➡️ createAssignment called');
-  console.log('employeePlanning:', this.employeePlanning);
-  console.log('scheduleId:', this.employeePlanning?.scheduleId);
+  private computeSummary(): void {
+    this.totalOrdinaryMin = 0;
+    this.totalNightMin = 0;
+    this.totalSundayMin = 0;
+    this.totalHolidayMin = 0;
 
-  if (!this.employeePlanning || !this.employeePlanning.scheduleId) {
-    console.error('❌ Planning ID manquant');
-    alert('Impossible de créer : planning non chargé.');
-    return;
-  }
+    this.siteList.forEach(siteName => {
+      this.tableDateKeys.forEach((dateKey, idx) => {
+        const d = this.tableDates[idx];
+        const isSun = d.getDay() === 0;  // 0 = dimanche
+        const isHol = this.isHoliday(dateKey);
 
-  const scheduleId = this.employeePlanning.scheduleId;
+        this.assignmentsMap[siteName][dateKey].forEach(a => {
+          if (a.isAbsence || a.absence || !a.startTime || !a.endTime) return;
 
-  this.assignmentService.addAssignment(scheduleId, formValue).subscribe({
-    next: () => this.loadPlanning(),
-    error: (err) => {
-      console.error('Erreur lors de la création :', err);
-    }
-  });
-}
+          const [sh, sm] = a.startTime.split(':').map(Number);
+          let [eh, em] = a.endTime.split(':').map(Number);
+          let startMin = sh * 60 + sm;
+          let endMin   = eh * 60 + em;
+          if (endMin < startMin) endMin += 24 * 60;
+          const duration = endMin - startMin;
 
+          // nuit (21h–24h) + (0h–5h)
+          let night = 0;
+          const startN1 = 21*60, endN1 = 24*60;
+          night += Math.max(0, Math.min(endMin, endN1) - Math.max(startMin, startN1));
+          const startN2 = 24*60, endN2 = 30*60;
+          night += Math.max(0, Math.min(endMin, endN2) - Math.max(startMin, startN2));
 
-updateAssignment(id: number, formValue: any) {
-  this.assignmentService.updateAssignment(id, formValue).subscribe({
-    next: (updatedAssignment) => {
-      console.log('Modification réussie ✅',updatedAssignment);
-      this.loadPlanning(); // recharge le planning
-    },
-    error: (err) => {
-      console.error('Erreur lors de la modification :', err);
-    }
-  });
-}
-
-
-
-onAddAssignment() {
-  if (!this.employee) {
-    console.error('Impossible d’ajouter : employee est null');
-    return;
-  }
-
-  const formValue = this.addForm.value;
-
-  const payload = {
-    ...formValue,
-    employeeId: this.employee.id
-  };
-
-  if (this.editingAssignment) {
-    this.updateAssignment(this.editingAssignment.id, payload);
-  } else {
-    this.createAssignment(payload);
-  }
-
-  this.showAddForm = false;
-  this.editingAssignment = null;
-}
-
-showToast(message: string, type: 'success' | 'error' | 'warning' = 'success') {
-  // TODO: remplace ceci par une vraie toastr ou snackbar plus tard
-  alert(`[${type.toUpperCase()}] ${message}`);
-}
-
-
-
-resetForm() {
-  this.selectedAssignment = null;
-  // tu peux aussi réinitialiser le formulaire s’il y en a un
-}
-
-
-confirmDelete(): void {
-  if (!this.editingAssignment || !this.employeePlanning?.scheduleId) {
-    this.showToast('Impossible de supprimer : données manquantes', 'warning');
-    return;
-  }
-
-  const confirmed = confirm('Voulez-vous vraiment supprimer cette vacation ?');
-  if (!confirmed) return;
-
-  this.assignmentService
-    .deleteAssignment(this.employeePlanning.scheduleId, this.editingAssignment.id)
-    .subscribe({
-      next: () => {
-        this.showToast('Vacation supprimée avec succès', 'success');
-        this.loadPlanning();
-        this.editingAssignment = null;
-        this.showAddForm = false;
-      },
-      error: err => this.showToast('Erreur lors de la suppression : ' + err.message, 'error')
+          if (isSun) {
+            this.totalSundayMin += duration;
+          } else if (isHol) {
+            this.totalHolidayMin += duration;
+          } else {
+            this.totalOrdinaryMin += (duration - night);
+          }
+          this.totalNightMin += night;
+        });
+      });
     });
-}
+  }
 
+  private computeDailyTotals(): void {
+    this.dailyTotalMin = this.tableDateKeys.map(_ => 0);
 
+    this.siteList.forEach(siteName => {
+      this.tableDateKeys.forEach((dateKey, idx) => {
+        const assigns = this.assignmentsMap[siteName][dateKey] || [];
+        assigns.forEach(a => {
+          if (a.isAbsence || a.absence || !a.startTime || !a.endTime) return;
 
-  /**
-   * Calcule les jours fériés français (nationaux) pour une année donnée.
-   * Renvoie un tableau de chaînes ISO "YYYY-MM-DD".
-   */
+          const [sh, sm] = a.startTime.split(':').map(Number);
+          let [eh, em] = a.endTime.split(':').map(Number);
+          let startMin = sh * 60 + sm;
+          let endMin   = eh * 60 + em;
+          if (endMin < startMin) endMin += 24*60;
+          this.dailyTotalMin[idx] += endMin - startMin;
+        });
+      });
+    });
+  }
+
+  formatMinutesToHours(mins: number): string {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m ? `${h}h${m.toString().padStart(2, '0')}` : `${h}h`;
+  }
+
+  getDuration(a: EmployeeAssignmentDTO): string {
+    if (a.isAbsence || a.absence || !a.startTime || !a.endTime) return '';
+    const [sh, sm] = a.startTime.split(':').map(Number);
+    let [eh, em] = a.endTime.split(':').map(Number);
+    let startMin = sh * 60 + sm;
+    let endMin   = eh * 60 + em;
+    if (endMin < startMin) endMin += 24 * 60;
+    return this.formatMinutesToHours(endMin - startMin);
+  }
+
+  // --------- Divers ----------
+
+  toggleAddMode() { this.mode = this.mode === 'add' ? 'none' : 'add'; }
+  toggleDeleteMode() { this.mode = this.mode === 'delete' ? 'none' : 'delete'; }
+
+  resetForm() {
+    this.selectedAssignment = null;
+  }
+
+  confirmDelete(): void {
+    if (!this.editingAssignment) return;
+
+    const site = this.getSiteByName(this.editingAssignment.siteName);
+    const scheduleId = this.getScheduleIdForSiteId(site?.id);
+    if (!scheduleId) return;
+    if (!confirm('Voulez-vous vraiment supprimer cette vacation ?')) return;
+
+    this.assignmentService
+      .deleteAssignment(scheduleId, this.editingAssignment.id)
+      .subscribe({
+        next: () => {
+          this.loadPlanning();
+          this.editingAssignment = null;
+          this.showAddForm = false;
+        },
+        error: err => alert('Erreur suppression : ' + (err.error?.message || err.message))
+      });
+  }
+
+  // --------- Jours fériés France ----------
+
   private getFrenchHolidays(year: number): string[] {
     const holidays: string[] = [];
+    holidays.push(`${year}-01-01`); // Jour de l'An
 
-    // 1. Jour de l'An : 1er janvier
-    holidays.push(`${year}-01-01`);
+    const easterDate = this.calculateEasterDate(year);
+    const easterMon = new Date(easterDate);
+    easterMon.setDate(easterDate.getDate() + 1);
+    holidays.push(this.formatISO(easterMon)); // Lundi de Pâques
 
-    // Calcul de la date de Pâques (algorithme de Gauss)
-    const easterDate = this.calculateEasterDate(year); // renvoie un objet Date
-    // 2. Lundi de Pâques : Pâques + 1 jour
-    const easterMonday = new Date(easterDate);
-    easterMonday.setDate(easterDate.getDate() + 1);
-    holidays.push(this.formatISO(easterMonday));
+    holidays.push(`${year}-05-01`); // Fête du Travail
+    holidays.push(`${year}-05-08`); // Victoire 1945
 
-    // 3. Fête du Travail : 1er mai
-    holidays.push(`${year}-05-01`);
+    const asc = new Date(easterDate);
+    asc.setDate(easterDate.getDate() + 39);
+    holidays.push(this.formatISO(asc)); // Ascension
 
+    const pentMon = new Date(easterDate);
+    pentMon.setDate(easterDate.getDate() + 50);
+    holidays.push(this.formatISO(pentMon)); // Lundi de Pentecôte
 
-    // 4. Victoire de 1945 : 8 mai
-    holidays.push(`${year}-05-08`);
-
-    // 5. Ascension : Pâques + 39 jours
-    const ascension = new Date(easterDate);
-    ascension.setDate(easterDate.getDate() + 39);
-    holidays.push(this.formatISO(ascension));
-
-    // 6. Lundi de Pentecôte : Pâques + 50 jours
-    const pentecostMonday = new Date(easterDate);
-    pentecostMonday.setDate(easterDate.getDate() + 50);
-    holidays.push(this.formatISO(pentecostMonday));
-
-    // 7. Fête Nationale : 14 juillet
-    holidays.push(`${year}-07-14`);
-
-    // 8. Assomption : 15 août
-    holidays.push(`${year}-08-15`);
-
-    // 9. Toussaint : 1er novembre
-    holidays.push(`${year}-11-01`);
-
-    // 10. Armistice : 11 novembre
-    holidays.push(`${year}-11-11`);
-
-    // 11. Noël : 25 décembre
-    holidays.push(`${year}-12-25`);
+    holidays.push(`${year}-07-14`); // Fête Nationale
+    holidays.push(`${year}-08-15`); // Assomption
+    holidays.push(`${year}-11-01`); // Toussaint
+    holidays.push(`${year}-11-11`); // Armistice
+    holidays.push(`${year}-12-25`); // Noël
 
     return holidays;
   }
 
-  formatTimeHM(time: string): string {
-    return time?.substring(0, 5) ?? '';
-  }
-
-  /**
-   * Calcule la date de Pâques (Gregorian) pour une année donnée
-   * en utilisant l'algorithme de Gauss. Retourne un objet Date.
-   */
   private calculateEasterDate(year: number): Date {
-    // Algorithme de Gauss (version pour calendrier grégorien)
     const a = year % 19;
     const b = Math.floor(year / 100);
     const c = year % 100;
@@ -657,16 +778,11 @@ confirmDelete(): void {
     const k = c % 4;
     const l = (32 + 2 * e + 2 * i - h - k) % 7;
     const m = Math.floor((a + 11 * h + 22 * l) / 451);
-    const month = Math.floor((h + l - 7 * m + 114) / 31); // 3 = mars, 4 = avril
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
     const day = ((h + l - 7 * m + 114) % 31) + 1;
-
-    // Renvoie un objet Date pour cette date de Pâques
     return new Date(year, month - 1, day);
   }
 
-  /**
-   * Formate un objet Date en chaîne ISO "YYYY-MM-DD".
-   */
   private formatISO(date: Date): string {
     const yyyy = date.getFullYear();
     const mm = (date.getMonth() + 1).toString().padStart(2, '0');

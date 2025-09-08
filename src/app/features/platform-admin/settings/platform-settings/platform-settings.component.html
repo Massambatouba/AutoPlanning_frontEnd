@@ -1,0 +1,112 @@
+<div class="container py-4" [formGroup]="form">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h4 mb-0">Paramètres Plateforme</h1>
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving">
+        <span *ngIf="!saving">Enregistrer</span>
+        <span *ngIf="saving" class="spinner-border spinner-border-sm"></span>
+      </button>
+    </div>
+
+    <div class="row g-4">
+      <!-- Branding -->
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-transparent"><b>Branding</b></div>
+          <div class="card-body">
+            <label class="form-label">Nom du site</label>
+            <input class="form-control mb-2" formControlName="siteName">
+            <label class="form-label">Logo URL</label>
+            <input class="form-control mb-2" formControlName="logoUrl">
+            <label class="form-label">Email support</label>
+            <input class="form-control" formControlName="supportEmail" type="email">
+          </div>
+        </div>
+      </div>
+
+      <!-- Facturation -->
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-transparent"><b>Facturation</b></div>
+          <div class="card-body">
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label">Devise</label>
+                <input class="form-control" formControlName="defaultCurrency" placeholder="EUR">
+              </div>
+              <div class="col-3">
+                <label class="form-label">TVA (%)</label>
+                <input class="form-control" type="number" min="0" step="0.1" formControlName="vatRate">
+              </div>
+              <div class="col-3 d-flex align-items-end">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" formControlName="vatEnabled" id="vatOn">
+                  <label class="form-check-label" for="vatOn">TVA active</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <label class="form-label">Fournisseur de paiement</label>
+        <select class="form-select" formControlName="paymentProvider">
+          <option value="NONE">Aucun (mode manuel)</option>
+          <!-- plus tard :
+          <option value="STRIPE" disabled>Stripe (à venir)</option>
+          -->
+        </select>
+
+        <div class="alert alert-info mt-2" *ngIf="isManualPayments">
+          Les paiements automatiques sont désactivés. Vous pourrez activer Stripe plus tard.
+        </div>
+      </div>
+
+      <!-- Abonnements -->
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-transparent"><b>Abonnements (défaut)</b></div>
+          <div class="card-body">
+            <div class="row g-2">
+              <div class="col-4">
+                <label class="form-label">Essai (jours)</label>
+                <input class="form-control" type="number" min="0" formControlName="trialDays">
+              </div>
+              <div class="col-8">
+                <label class="form-label">Plan par défaut</label>
+                <select class="form-select" formControlName="defaultPlanId">
+                  <option [ngValue]="null">— Aucun —</option>
+                  <option *ngFor="let p of plans" [ngValue]="p.id">{{ p.name }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sécurité -->
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-transparent"><b>Sécurité</b></div>
+          <div class="card-body">
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label">Longueur min. mot de passe</label>
+                <input class="form-control" type="number" min="6" formControlName="passwordMinLength">
+              </div>
+              <div class="col-6 d-flex align-items-end">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" formControlName="require2FA" id="twofa">
+                  <label class="form-check-label" for="twofa">2FA obligatoire</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SMTP / Stripe (facultatif dans le MVP UI, ajoute quand tu veux) -->
+    </div>
+
+    <div class="text-danger mt-3" *ngIf="errorMsg">{{ errorMsg }}</div>
+  </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -8,6 +8,9 @@ import { SiteService }     from 'src/app/services/site.service';
 import { AgentType }       from 'src/app/shared/models/agent-type.model';
 import { Site }            from 'src/app/shared/models/site.model';
 import { Employee }        from 'src/app/shared/models/employee.model';
+import { DraftDoc, EmployeeDocsComponent } from '../employee-docs/employee-docs.component';
+import { EmployeeDocumentsServiceTsService } from 'src/app/services/employee-documents.service.ts.service';
+import { catchError, forkJoin, of } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -18,14 +21,18 @@ import { Employee }        from 'src/app/shared/models/employee.model';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    RouterModule
+    RouterModule,
+    EmployeeDocsComponent
   ]
 })
 export class EmployeeCreateComponent implements OnInit {
+  @ViewChild(EmployeeDocsComponent) docsComp!: EmployeeDocsComponent;
   employeeForm!: FormGroup;
   saving = false;
   error: string | null = null;
   sites: Site[] = [];
+  employeeId?: number;
+
 
   departments = ['Sécurité', 'Informatique', 'RH'];
   contractTypes = [
@@ -40,7 +47,8 @@ export class EmployeeCreateComponent implements OnInit {
     private fb: FormBuilder,
     private employeeService: EmployeeService,
     private siteService: SiteService,
-    private router: Router
+    private router: Router,
+    private docsSrv: EmployeeDocumentsServiceTsService
   ) {}
 
   ngOnInit() {
@@ -134,61 +142,46 @@ export class EmployeeCreateComponent implements OnInit {
     ctrl.setValue(arr);
   }
 
-  /** Soumission du formulaire */
-  onSubmit(): void {
-    if (this.employeeForm.invalid) {
-      this.employeeForm.markAllAsTouched();
-      return;
-    }
-    this.saving = true;
-    this.error = null;
-
-    const fv = this.employeeForm.value;
-    const payload: Employee = {
-      id: fv.id,
-      firstName: fv.firstName,
-      lastName:  fv.lastName,
-      email:     fv.email,
-      phone:     fv.phone,
-      adress: fv.adress,
-      city: fv.city,
-      country: fv.country,
-      zipCode: fv.zipCode,
-      position:  fv.position,
-      department: fv.department,
-      employeeCode: fv.employeeCode,
-      contractType: fv.contractType,
-      maxHoursPerWeek: fv.maxHoursPerWeek,
-      siteId:    fv.siteId,
-      preferredSites: fv.preferredSites,
-      skillSets: fv.skillSets
-        .split(',')
-        .map((s: string) => s.trim())
-        .filter((s: string) => s),
-      agentTypes: fv.agentTypes,
-  preferences: {
-    canWorkWeekends:          fv.canWorkWeekends,
-    canWorkNights:            fv.canWorkNights,
-    canWorkWeeks:             fv.canWorkWeeks,
-    prefersDay:               fv.prefersDay,
-    prefersNight:             fv.prefersNight,
-    noPreference:             fv.noPreference,
-    minHoursPerDay:           fv.minHoursPerDay,
-    maxHoursPerDay:           fv.maxHoursPerDay,
-    minHoursPerWeek:          fv.minHoursPerWeek,
-    maxHoursPerWeek:          fv.maxHoursPerWeekPreference,
-    preferredConsecutiveDays: fv.preferredConsecutiveDays,
-    minConsecutiveDaysOff:    fv.minConsecutiveDaysOff
-  },
-  //siteName: this.getSiteName(fv.siteId)
-    };
-
-    this.employeeService.createEmployee(payload).subscribe({
-      next: res => this.router.navigate(['/employees', res.id]),
-      error: err => {
-        this.error = err.error?.message || 'Une erreur est survenue';
-        this.saving = false;
-      }
-    });
+ private toFormData(d: DraftDoc): FormData {
+    const fd = new FormData();
+    fd.append('category', d.category);
+    fd.append('type', d.type);
+    if (d.number) fd.append('number', d.number);
+    if (d.expiryDate) fd.append('expiryDate', d.expiryDate);
+    if (d.file) fd.append('file', d.file);
+    return fd;
   }
+
+  onSubmit() {
+  if (this.employeeForm.invalid) return;
+
+  // ✅ Vérifier documents AVANT l'appel API
+  if (!this.docsComp.isValid()) {
+    this.docsComp.markInvalid();
+    // Optionnel : scroll jusqu’au bloc documents
+    document.querySelector('app-employee-docs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  this.saving = true;
+
+  this.employeeService.createEmployee(this.employeeForm.value).subscribe({
+    next: (emp) => {
+      const drafts = this.docsComp.collectDrafts();
+      const uploads$ = drafts.map(d =>
+        this.docsSrv.createDocument(emp.id, this.toFormData(d))
+      );
+      forkJoin(uploads$).subscribe({
+        next: () => { this.saving = false; /* redirection / toast */ },
+        error: () => { this.saving = false; /* gérer au besoin */ }
+      });
+    },
+    error: (err) => {
+      this.saving = false;
+      this.error = err.error?.message || err.message;
+    }
+  });
 }
+
+}
+

@@ -61,7 +61,7 @@ export interface EmployeePreferences {
   minConsecutiveDaysOff:    number;
 }
 
-export interface AssignmentDTO {
+export interface EmployeeAssignmentDTO {
   id: number;
   siteName: string;
   startTime: string;
@@ -71,6 +71,7 @@ export interface AssignmentDTO {
   siteId?: number;
   address: string;
   city: string;
+  notes?: string;
   zipCode: string;
   country: string;
   absence?: {
@@ -84,8 +85,8 @@ export interface EmployeePlanningDTO {
   employeeId: number;
   scheduleId: number
   employeeName: string;
-  calendar: { [key: string]: AssignmentDTO[] };
-  assignments: AssignmentDTO[];
+  calendar: { [key: string]: EmployeeAssignmentDTO[] };
+  assignments: EmployeeAssignmentDTO[];
 }
 
 export interface EmployeeGridRow {
@@ -116,4 +117,14 @@ export interface EmployeeShiftDto {
   endTime:     string;
   shiftLabel?: string | null;
 }
+
+export interface EmployeeLite {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  agentTypes?: string[];
+}
+
+
 

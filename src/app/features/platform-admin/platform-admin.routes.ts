@@ -38,7 +38,13 @@ export const PLATFORM_ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./analytics/platform-analytics/platform-analytics.component')
             .then(m => m.PlatformAnalyticsComponent)
+      },
+      { path: 'settings',
+        loadComponent: () =>
+          import('./settings/platform-settings/platform-settings.component')
+            .then(m => m.PlatformSettingsComponent)
       }
+
     ]
   }
 ];

@@ -3,80 +3,84 @@ import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { Employee, EmployeePlanningDTO } from '../shared/models/employee.model';
 import { environment } from 'src/environments/environment';
+import { EmployeeMonthlyPlanningDTO, EmployeeMonthlySummary } from '../shared/models/employee-planning-agg.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class EmployeeService {
-private base = `${environment.apiUrl}/employees`;
-constructor(private http: HttpClient) {}
+  private readonly ROOT = `${environment.apiUrl}`;                 // ex: http://localhost:8080/api
+  private readonly EMP  = `${this.ROOT}/employees`;
+  private readonly SITES = `${this.ROOT}/sites`;
+  private readonly PLANNING = `${this.ROOT}/planning`;
 
-/** Liste filtrée (department & contractType facultatifs) */
-getEmployees(department?: string, contractType?: string): Observable<Employee[]> {
-  let params = new HttpParams();
-    if (department && department !== 'all') {
-      params = params.set('department', department);
+  constructor(private http: HttpClient) {}
+
+  /** Liste filtrée (department & contractType facultatifs) */
+  getEmployees(department?: string, contractType?: string): Observable<Employee[]> {
+    let params = new HttpParams();
+    if (department && department !== 'all')  params = params.set('department', department);
+    if (contractType && contractType !== 'all') params = params.set('contractType', contractType);
+    return this.http.get<Employee[]>(this.EMP, { params });
   }
-    if (contractType && contractType !== 'all') {
-      params = params.set('contractType', contractType);
-  }
-    return this.http.get<Employee[]>(this.base, { params });
-}
 
-// getSiteEmployees(siteId: number) {
-//   return this.http
-//     .get<EmployeePlanningDTO[]>(`${environment.apiUrl}/employees/all`)
-//     .pipe( map(list => list.filter(e => e.siteId === siteId)) );
-// }
-
-/** Tous les employés (sans filtre) */
+  /** Tous les employés (sans filtre) */
   getAllEmployees(): Observable<Employee[]> {
-    return this.http.get<Employee[]>(`${this.base}/all`);
+    return this.http.get<Employee[]>(`${this.EMP}/all`);
   }
 
-getSiteEmployees(siteId: number): Observable<EmployeePlanningDTO[]> {
-  return this.http.get<EmployeePlanningDTO[]>(
-    `${environment.apiUrl}/sites/${siteId}/employees`
-  ).pipe(
-    map(employees => employees.filter(emp =>
-      emp.employeeId && emp.employeeName && emp.employeeName.trim() !== ''
-    ))
-  );
-}
+  /** Employés actifs d’un site (pour planning site) */
+  getSiteEmployees(siteId: number): Observable<EmployeePlanningDTO[]> {
+    return this.http.get<EmployeePlanningDTO[]>(`${this.SITES}/${siteId}/employees`)
+      .pipe(map(employees =>
+        employees.filter(emp => emp.employeeId && emp.employeeName && emp.employeeName.trim() !== '')
+      ));
+  }
 
-
-/** Récupérer un seul */
+  /** Un seul employé */
   getEmployeeById(id: number): Observable<Employee> {
-    return this.http.get<Employee>(`${this.base}/${id}`);
+    return this.http.get<Employee>(`${this.EMP}/${id}`);
   }
 
   createEmployee(employee: Partial<Employee>): Observable<Employee> {
-    return this.http.post<Employee>(this.base, employee);
+    return this.http.post<Employee>(this.EMP, employee);
   }
 
   updateEmployee(id: number, employee: Partial<Employee>): Observable<Employee> {
-    return this.http.put<Employee>(`${this.base}/${id}`, employee);
+    return this.http.put<Employee>(`${this.EMP}/${id}`, employee);
   }
 
   deleteEmployee(id: number): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/employees/${id}`);
+    return this.http.delete<void>(`${this.EMP}/${id}`);
   }
 
-/** Basculer statut actif/inactif */
+  /** Basculer statut actif/inactif */
   toggleEmployeeStatus(id: number): Observable<Employee> {
-    return this.http.put<Employee>(`${this.base}/${id}/toggle-status`, {});
+    return this.http.put<Employee>(`${this.EMP}/${id}/toggle-status`, {});
   }
 
+  /** Schedules d’un employé (si tu l’utilises) */
   getEmployeeSchedules(id: number): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/employees/${id}/schedules`);
+    return this.http.get<any[]>(`${this.EMP}/${id}/schedules`);
   }
 
-  /** Récupérer le planning mensuel d'un employé */
-getMonthlyPlanning(employeeId: number, month: number, year: number): Observable<any> {
-  const params = new HttpParams()
-    .set('month', month)
-    .set('year', year);
-  return this.http.get(`${environment.apiUrl}/planning/employee/${employeeId}`, { params });
-}
+  /** Planning mensuel (classique) */
+  getMonthlyPlanning(employeeId: number, month: number, year: number): Observable<any> {
+    const params = new HttpParams().set('month', month).set('year', year);
+    return this.http.get(`${this.PLANNING}/employee/${employeeId}`, { params });
+  }
 
+  /** Planning mensuel agrégé (multi-sites) */
+  getAggregatedMonthlyPlanning(employeeId: number, month: number, year: number) {
+    return this.http.get<EmployeeMonthlyPlanningDTO>(
+      `${this.EMP}/${employeeId}/planning/aggregated`,
+      { params: { year, month } as any }
+    );
+  }
+
+  /** Résumés mensuels (12 mois) */
+  listMonthlyPlanningSummaries(employeeId: number, year: number) {
+    return this.http.get<EmployeeMonthlySummary[]>(
+      `${this.EMP}/${employeeId}/planning/summaries`,
+      { params: { year } as any }
+    );
+  }
 }

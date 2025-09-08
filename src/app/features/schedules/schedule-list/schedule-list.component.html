@@ -127,23 +127,39 @@
             </div>
         </div>
 
-        <div class="card-footer d-flex justify-content-between">
-          <a [routerLink]="['/schedules', schedule.id]" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-eye"></i> View
-          </a>
-          <a [routerLink]="['/schedules', schedule.id, 'edit']"
-            class="btn btn-outline-secondary btn-sm"
-            [class.disabled]="!canEditFromList(schedule)"
-            [attr.aria-disabled]="!canEditFromList(schedule)"
-            [style.pointer-events]="!canEditFromList(schedule) ? 'none' : null">
-            <i class="bi bi-pencil"></i> Edit
-          </a>
-          <button class="btn btn-outline-primary btn-sm"
-                  *ngIf="canSend(schedule)"
-                  (click)="sendSchedule(schedule.id)">
-            <i class="bi bi-send"></i>
-          </button>
-        </div>
+<div class="card-footer d-flex justify-content-between">
+  <a
+    [routerLink]="['/schedules', schedule.id]"
+    (click)="$event.stopPropagation()"
+    class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-eye"></i> View
+  </a>
+
+  <a
+    [routerLink]="['/schedules', schedule.id, 'edit']"
+    (click)="$event.stopPropagation()"
+    class="btn btn-outline-secondary btn-sm"
+    [class.disabled]="!canEditFromList(schedule)"
+    [attr.aria-disabled]="!canEditFromList(schedule)"
+    [style.pointer-events]="!canEditFromList(schedule) ? 'none' : null">
+    <i class="bi bi-pencil"></i> Edit
+  </a>
+
+  <button class="btn btn-outline-primary btn-sm"
+          *ngIf="canSend(schedule)"
+          (click)="$event.stopPropagation(); sendSchedule(schedule.id)">
+    <i class="bi bi-send"></i>
+  </button>
+
+  <button class="btn btn-outline-danger btn-sm"
+          (click)="$event.stopPropagation(); deleteSchedule(schedule)"
+          [disabled]="deletingId === schedule.id || isPublished(schedule) || !canEditFromList(schedule)"
+          [attr.aria-disabled]="deletingId === schedule.id || isPublished(schedule) || !canEditFromList(schedule)">
+    <span *ngIf="deletingId === schedule.id" class="spinner-border spinner-border-sm me-1"></span>
+    <i class="bi bi-trash"></i> Delete
+  </button>
+</div>
+
       </div>
     </div>
   </div>

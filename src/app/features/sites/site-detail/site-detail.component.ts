@@ -8,6 +8,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Schedule } from 'src/app/shared/models/schedule.model';
 import { ScheduleService } from 'src/app/services/schedule.service';
 import { CompanyRoutingModule } from '../../company/company-routing.module';
+import { AssignEmployeeModalComponent } from '../assign-modal/assign-employee-modal/assign-employee-modal.component';
 
 @Component({
   standalone: true,
@@ -20,6 +21,7 @@ import { CompanyRoutingModule } from '../../company/company-routing.module';
     ReactiveFormsModule,
     RouterModule,
     CompanyRoutingModule,
+    AssignEmployeeModalComponent,
     SiteRoutingModule
   ]
 })
@@ -29,6 +31,9 @@ export class SiteDetailComponent implements OnInit {
   loadingSchedules = false;
   loading = true;
   error = '';
+  
+  siteId!: number;
+  showAssign = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -38,6 +43,7 @@ export class SiteDetailComponent implements OnInit {
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.siteId = id;  
     this.loadSite(id);
   }
 
@@ -54,6 +60,12 @@ export class SiteDetailComponent implements OnInit {
         }
       });
 }
+
+onEmployeeAttached(_emp: any) {
+  this.showAssign = false;
+  this.reloadSiteEmployees?.();
+}
+reloadSiteEmployees?(): void;
 
 private loadSchedules() {
     if (!this.site) return;
