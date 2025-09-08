@@ -11,6 +11,7 @@ import {
   Schedule,
   ScheduleAssignment,
   ScheduleAssignmentRequest,
+  ScheduleException,
   WeeklyScheduleRule,
 } from 'src/app/shared/models/schedule.model';
 import { ScheduleComplianceComponent } from '../schedule-compliance/schedule-compliance.component';
@@ -28,7 +29,6 @@ type MissingItem = {
   have: number;
   missing: number;
 };
-
 
 @Component({
   standalone: true,
@@ -59,6 +59,11 @@ missingDetails: Record<string, MissingItem[]> = {};
 
 schedule!: Schedule;
 siteId!: number;
+
+
+exceptions: ScheduleException[] = [];
+exceptionsByDay: Record<string, ScheduleException[]> = {};
+
 
 siteEmployees: EmployeeLite[] = [];
 empLoading = false;
@@ -367,7 +372,7 @@ private loadSchedule(id: number): void {
           'published:', this.schedule?.isPublished, 'sent:', this.schedule?.isSent);
 
         // ⬇️ NE PLUS LIRE s.assignments (il n'existe plus sur Schedule)
-        this.assignments = []; // on repart à vide; on chargera via loadAssignments()
+        this.assignments = []; 
       }),
       finalize(() => this.loadingSchedule = false)
     )
@@ -389,9 +394,20 @@ private loadSchedule(id: number): void {
           console.log('[DEBUG] rules reçues :', rules);
           this.siteRules = rules;
 
-          // ⬇️ Très important : on charge maintenant les vacations,
-          // et c'est loadAssignments() qui appellera buildMonthGrid().
-          this.loadAssignments();
+          const { start, end } = this.periodRange();
+
+          this.scheduleSrv.getSiteExceptions(this.siteId, start, end).subscribe({
+            next: ex => {
+              this.exceptions = ex || [];
+              // on enchaîne ensuite le chargement des vacations
+              this.loadAssignments();
+            },
+            error: _ => {
+              this.exceptions = [];
+              this.loadAssignments();
+            }
+          });
+
         });
       },
       error: err => {
@@ -685,15 +701,32 @@ generateAssignments() {
       inAxis: this.dateKeys.includes(this.getAssignmentDay(a))
     })));
 
+    // -- Prépare exceptionsByDay à partir this.exceptions
+this.exceptionsByDay = {};
+const { start: pStart, end: pEnd } = this.periodRange();
+
+for (const ex of (this.exceptions || [])) {
+  const exStart = this.formatIso((ex as any).startDate || pStart);
+  const exEnd   = this.formatIso((ex as any).endDate   || pEnd);
+  const allowed = ((ex as any).daysOfWeek && (ex as any).daysOfWeek.length)
+    ? (ex as any).daysOfWeek.map((d: string) => this.jsDowFromApi(d))
+    : null;
+
+  for (const d of this.dateKeys) {
+    if (d < exStart || d > exEnd) continue;
+    const js = new Date(d).getDay();
+    if (allowed && !allowed.includes(js)) continue;
+    (this.exceptionsByDay[d] ??= []).push(ex);
+  }
+}
 
     /* ---------- 5. besoins / gaps & total commandé ---------- */
-/* ---------- 5. besoins / gaps & total commandé ---------- */
+/* ---------- 5. besoins / gaps & total commandé (avec exceptions) ---------- */
 this.coverageGap = {};
 this.requiredTotalMin = 0;
 
 const dayNameToJSIdx: Record<string, number> = {
-  SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3,
-  THURSDAY: 4, FRIDAY: 5, SATURDAY: 6,
+  SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4, FRIDAY: 5, SATURDAY: 6,
 };
 
 // Besoin "simple" (jour -> agentType -> nombre)
@@ -704,35 +737,52 @@ type Key = string; // `${day}|${agentType}|${start}|${end}`
 const neededDetail = new Map<Key, number>();
 const haveDetail   = new Map<Key, number>();
 
-// 5-a) besoins depuis les règles
-this.siteRules.forEach(rule => {
-  const jsDay = dayNameToJSIdx[rule.dayOfWeek as keyof typeof dayNameToJSIdx];
+// petit helper
+const addNeed = (day: string, agentType: string, start: string, end: string, count: number) => {
+  if (!count) return;
+  needMap[day] ??= {};
+  needMap[day][agentType] = (needMap[day][agentType] ?? 0) + count;
 
-  this.dateKeys
-    .filter(d => new Date(d).getDay() === jsDay)
-    .forEach(d => {
-      rule.agents.forEach(a => {
-        // par type
-        needMap[d] ??= {};
-        needMap[d][a.agentType] = (needMap[d][a.agentType] ?? 0) + a.requiredCount;
+  const k: Key = `${day}|${agentType}|${start}|${end}`;
+  neededDetail.set(k, (neededDetail.get(k) ?? 0) + count);
 
-        // par type + créneau
-        const start = a.startTime.slice(0, 5);
-        const end   = a.endTime.slice(0, 5);
-        const k: Key = `${d}|${a.agentType}|${start}|${end}`;
-        neededDetail.set(k, (neededDetail.get(k) ?? 0) + a.requiredCount);
+  // durée pour KPI "requiredTotalMin"
+  const [sh, sm] = (start || '00:00').split(':').map(Number);
+  let [eh, em]   = (end   || '00:00').split(':').map(Number);
+  let dur = eh * 60 + em - (sh * 60 + sm);
+  if (dur <= 0) dur += 24 * 60; // chevauche minuit
+  this.requiredTotalMin += dur * count;
+};
 
-        // total "commandé" (KPI)
-        const [sh, sm] = start.split(':').map(Number);
-        let [eh, em]   = end.split(':').map(Number);
-        let dur = eh * 60 + em - (sh * 60 + sm);
-        if (dur <= 0) dur += 24 * 60;
-        this.requiredTotalMin += dur * a.requiredCount;
+// --- construit la commande jour par jour (règles + exceptions) ---
+for (const day of this.dateKeys) {
+  const jsDay = new Date(day).getDay();
+
+  // 1) si fermeture, on saute tout
+  const todaysEx = this.exceptionsByDay[day] || [];
+  const isClosed = todaysEx.some(e => (e as any).type === 'CLOSE');
+  if (isClosed) continue;
+
+  // 2) règles hebdo du jour
+  this.siteRules
+    .filter(r => dayNameToJSIdx[r.dayOfWeek as keyof typeof dayNameToJSIdx] === jsDay)
+    .forEach(r => {
+      r.agents.forEach(a => {
+        addNeed(day, a.agentType, a.startTime.slice(0,5), a.endTime.slice(0,5), a.requiredCount);
       });
     });
-});
 
-// 5-b) présent réel
+  // 3) exceptions ajoutées ce jour
+  todaysEx
+    .filter(e => (e as any).type !== 'CLOSE')
+    .forEach((e: any) => {
+      // on suppose que l’exception contient agentType / startTime / endTime / requiredCount
+      addNeed(day, e.agentType, (e.startTime||'').slice(0,5), (e.endTime||'').slice(0,5), e.requiredCount || 1);
+    });
+}
+
+
+// 5-b) présent réel (inchangé)
 for (const a of this.assignments) {
   const day = this.getAssignmentDay(a);
   if (!day) continue;
@@ -746,7 +796,7 @@ for (const a of this.assignments) {
   }
 }
 
-// 5-c) détails manquants par jour
+// 5-c) détails manquants par jour (inchangé)
 this.missingDetails = {};
 neededDetail.forEach((need, k) => {
   const [day, agentType, start, end] = k.split('|');
@@ -758,7 +808,7 @@ neededDetail.forEach((need, k) => {
   }
 });
 
-// 5-d) gaps + total manquant pour l’affichage
+// 5-d) gaps + total manquant par jour (inchangé)
 this.coverageGap = {};
 this.missingCount = {};
 Object.entries(needMap).forEach(([d, types]) => {
@@ -766,7 +816,7 @@ Object.entries(needMap).forEach(([d, types]) => {
   this.missingCount[d] = totalMissing;
   this.coverageGap[d] = totalMissing > 0;
 });
-    /* ---------- 5-bis. total minutes demandées ---------- */
+
 
     /* 6) tableau final employés ---------------------------------------- */
     this.employees = Array.from(empMap.entries())
@@ -967,6 +1017,37 @@ getPeriodLabel(): string {
       },
     });
   }
+
+  private periodRange() {
+  if (this.schedule.periodType === 'RANGE' && this.schedule.startDate && this.schedule.endDate) {
+    return { start: this.formatIso(this.schedule.startDate), end: this.formatIso(this.schedule.endDate) };
+  }
+  const y = this.schedule.year!, m = this.schedule.month!;
+  const start = `${y}-${this.pad(m)}-01`;
+  const end   = `${y}-${this.pad(m)}-${this.pad(new Date(y, m, 0).getDate())}`;
+  return { start, end };
+}
+
+private jsDowFromApi(dow: string): number {
+  // API "SUNDAY..SATURDAY" → JS getDay(): 0=dim..6=sam
+  const map: any = { SUNDAY:0, MONDAY:1, TUESDAY:2, WEDNESDAY:3, THURSDAY:4, FRIDAY:5, SATURDAY:6 };
+  return map[dow] ?? -1;
+}
+
+private dateInRange(d: string, start: string, end: string): boolean {
+  return d >= start && d <= end;
+}
+
+// Texte tooltip pour la bande exceptions
+excTooltip(day: string): string {
+  const list = this.exceptionsByDay[day] ?? [];
+  if (!list.length) return '';
+  return list.map(e => e.type === 'CLOSE'
+    ? 'Fermeture'
+    : `${e.requiredCount}× ${e.agentType} (${(e.startTime||'').slice(0,5)}–${(e.endTime||'').slice(0,5)})`
+  ).join('\n');
+}
+
 
 
 }

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Schedule, ScheduleAssignment, ScheduleAssignmentRequest, ScheduleResponse, WeeklyScheduleRule } from '../shared/models/schedule.model';
+import { Schedule, ScheduleAssignment, ScheduleAssignmentRequest, ScheduleException, ScheduleResponse, WeeklyScheduleRule } from '../shared/models/schedule.model';
 import { AuthService } from './auth.service';
 import { EmployeePlanningDTO, SitePlanningResponse } from '../shared/models/employee.model';
 
@@ -210,6 +210,14 @@ getSiteEmployees(siteId: number): Observable<EmployeePlanningDTO[]> {
     `${environment.apiUrl}/sites/${siteId}/employees`
   );
 }
+
+getSiteExceptions(siteId: number, start: string, end: string) {
+  // le contrôleur attend from / to
+  const url = `/api/sites/${siteId}/weekly-exceptions?from=${start}&to=${end}`;
+  return this.http.get<ScheduleException[]>(`${this.api}/sites/${siteId}/weekly-exceptions?from=${start}&to=${end}`);
+}
+
+
 
 
 getSchedulesByEmployee(employeeId: number): Observable<Schedule[]> {
