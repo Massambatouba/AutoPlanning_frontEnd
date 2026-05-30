@@ -152,36 +152,135 @@ export class EmployeeCreateComponent implements OnInit {
     return fd;
   }
 
-  onSubmit() {
-  if (this.employeeForm.invalid) return;
+  /** Convertit ce que renvoie le formulaire en AgentType[] (string) attendus par le back */
+private normalizeAgentTypes(arr: any[]): string[] {
+  // Si ton enum TS est string (e.g. 'ADS'), on renvoie tel quel,
+  // si jamais c'est numérique, on essaie de remonter le nom.
+  return (arr || []).map((v: any) => {
+    if (typeof v === 'string') return v;
+    // @ts-ignore – si c'est un enum numérique, on tente la clé
+    return (AgentType as any)[v] ?? String(v);
+  });
+}
 
-  // ✅ Vérifier documents AVANT l'appel API
-  if (!this.docsComp.isValid()) {
-    this.docsComp.markInvalid();
-    // Optionnel : scroll jusqu’au bloc documents
-    document.querySelector('app-employee-docs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+/** Construit le payload EXACT pour EmployeeRequest (DTO back) */
+private buildEmployeePayload(): any {
+  const f = this.employeeForm.getRawValue();
+
+  // skillSets: "a, b, c" -> ["a","b","c"], jamais ""
+  const skillSets: string[] = (f.skillSets || '')
+    .split(',')
+    .map((s: string) => s.trim())
+    .filter(Boolean);
+
+  return {
+    // champs simples
+    firstName: f.firstName,
+    lastName:  f.lastName,
+    email:     f.email,
+    phone:     f.phone || null,
+
+    adress:    f.adress || null,
+    zipCode:   f.zipCode || null,
+    city:      f.city || null,
+    country:   f.country || null,
+
+    position:      f.position,
+    department:    f.department || null,
+    employeeCode:  f.employeeCode,
+    contractType:  f.contractType,                 // ex: "FULL_TIME"
+    maxHoursPerWeek: Number(f.maxHoursPerWeek),    // niveau racine du DTO
+    siteId:        Number(f.siteId),
+
+    // listes : JAMAIS "", toujours []
+    preferredSites: Array.isArray(f.preferredSites)
+      ? f.preferredSites.map((n: any) => Number(n))
+      : [],
+
+    skillSets, // tableau de string
+
+    agentTypes: this.normalizeAgentTypes(f.agentTypes), // tableau de strings (enum names)
+
+    // objet imbriqué OBLIGATOIRE pour matcher EmployeeRequest.preferences
+    preferences: {
+      canWorkWeekends: !!f.canWorkWeekends,
+      canWorkWeeks:    !!f.canWorkWeeks,
+      canWorkNights:   !!f.canWorkNights,
+      prefersDay:      !!f.prefersDay,
+      prefersNight:    !!f.prefersNight,
+      noPreference:    !!f.noPreference,
+
+      minHoursPerDay:  Number(f.minHoursPerDay ?? 0),
+      maxHoursPerDay:  Number(f.maxHoursPerDay ?? 0),
+      minHoursPerWeek: Number(f.minHoursPerWeek ?? 0),
+      // ⚠️ ton form s’appelle maxHoursPerWeekPreference pour la partie préférences
+      maxHoursPerWeek: Number(f.maxHoursPerWeekPreference ?? 0),
+
+      preferredConsecutiveDays: Number(f.preferredConsecutiveDays ?? 0),
+      minConsecutiveDaysOff:    Number(f.minConsecutiveDaysOff ?? 0),
+    },
+  };
+}
+
+
+onSubmit() {
+  this.error = null;
+
+  if (this.employeeForm.invalid) {
+    this.employeeForm.markAllAsTouched();
+    this.error = 'Le formulaire contient des erreurs';
     return;
   }
 
-  this.saving = true;
+  // 1) Construire le payload conforme au DTO
+  const payload = this.buildEmployeePayload();
 
-  this.employeeService.createEmployee(this.employeeForm.value).subscribe({
-    next: (emp) => {
-      const drafts = this.docsComp.collectDrafts();
-      const uploads$ = drafts.map(d =>
-        this.docsSrv.createDocument(emp.id, this.toFormData(d))
-      );
-      forkJoin(uploads$).subscribe({
-        next: () => { this.saving = false; /* redirection / toast */ },
-        error: () => { this.saving = false; /* gérer au besoin */ }
+  // 2) Créer l’employé (JSON)
+  this.saving = true;
+  this.employeeService.createEmployee(payload).subscribe({
+    next: (emp: Employee) => {
+      this.employeeId = emp.id;
+
+      // 3) Récupérer les brouillons de documents du composant enfant
+      const drafts: DraftDoc[] =
+        this.docsComp && typeof this.docsComp.collectDrafts === 'function'
+          ? this.docsComp.collectDrafts()
+          : [];
+
+      if (!drafts.length) {
+        // pas de doc à envoyer → terminé
+        this.saving = false;
+        this.router.navigate(['/employees']);
+        return;
+      }
+
+      // 4) Enchaîner les POST documents (multipart/form-data)
+      forkJoin(
+        drafts.map(d =>
+          this.docsSrv.createDocument(emp.id!, this.toFormData(d))
+            .pipe(catchError(err => of(err)))
+        )
+      ).subscribe({
+        next: () => {
+          this.saving = false;
+          this.router.navigate(['/employees']);
+        },
+        error: () => {
+          // catchError empêche d’arriver ici normalement, mais on sécurise
+          this.saving = false;
+          this.router.navigate(['/employees']);
+        }
       });
     },
     error: (err) => {
       this.saving = false;
-      this.error = err.error?.message || err.message;
+      this.error = err?.error?.message || err?.message || 'Erreur lors de la création de l’employé';
+      console.error('Erreur création employé', err);
     }
   });
 }
+
+
 
 }
 

@@ -1,181 +1,210 @@
-<div class="site-detail-container">
-  <header class="page-header" *ngIf="site">
-    <div class="header-left">
-      <button class="btn btn-outline" routerLink="/sites">
-        <i class="material-icons">arrow_back</i>
-        Retour
-      </button>
-      <h1>{{ site.name }}</h1>
+<div class="container-xxl py-4 site-detail-page" *ngIf="site">
+
+  <!-- En-tête -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-3">
+      <a class="btn btn-outline-secondary d-none d-sm-inline-flex align-items-center" routerLink="/sites">
+        <i class="bi bi-arrow-left me-2"></i> Retour
+      </a>
+      <h1 class="h4 mb-0">{{ site.name }}</h1>
+      <span class="badge" [ngClass]="site.active ? 'bg-success' : 'bg-warning text-dark'">
+        {{ site.active ? 'Actif' : 'Inactif' }}
+      </span>
     </div>
 
-    <!-- Bouton dans l’en-tête -->
-    <button class="btn btn-primary" (click)="showAssign = true">
-      Affecter un employé
-    </button>
-
-    <!-- Le modal -->
-    <app-assign-employee-modal
-      *ngIf="showAssign"
-      [siteId]="site?.id ?? siteId"
-      (closed)="showAssign = false"
-      (attached)="onEmployeeAttached($event)">
-    </app-assign-employee-modal>
-
-
-    <div class="header-actions">
-      <button
-        class="btn btn-outline"
-        (click)="toggleSiteStatus()"
-      >
-        <i class="material-icons">{{ site.active ? 'toggle_off' : 'toggle_on' }}</i>
+    <div class="d-none d-sm-flex gap-2">
+      <button class="btn btn-outline-secondary" (click)="toggleSiteStatus()">
+        <i class="bi" [ngClass]="site.active ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
         {{ site.active ? 'Désactiver' : 'Activer' }}
       </button>
-
-      <button
-        class="btn btn-primary"
-        [routerLink]="['/sites', site.id, 'edit']"
-      >
-        <i class="material-icons">edit</i>
-        Modifier
+      <a class="btn btn-outline-primary" [routerLink]="['/sites', site.id, 'edit']">
+        <i class="bi bi-pencil-square me-1"></i> Modifier
+      </a>
+      <button class="btn btn-primary" (click)="showAssign = true">
+        <i class="bi bi-person-plus me-1"></i> Affecter un employé
       </button>
     </div>
-  </header>
 
-  <div *ngIf="loading" class="loading-container">
-    <div class="spinner"></div>
-  </div>
-
-  <div *ngIf="error" class="alert alert-error">
-    {{ error }}
-  </div>
-
-  <div *ngIf="!loading && site" class="site-content">
-    <div class="site-info card">
-      <div class="site-header">
-        <div class="site-status">
-          <span class="badge" [class.badge-success]="site.active" [class.badge-warning]="!site.active">
-            {{ site.active ? 'Actif' : 'Inactif' }}
-          </span>
-        </div>
-      </div>
-
-      <div class="info-section">
-        <h2>Informations du Site</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Adresse</label>
-            <p>{{ site.address }}</p>
-          </div>
-          <div class="info-item">
-            <label>Ville</label>
-            <p>{{ site.city }}</p>
-          </div>
-          <div class="info-item">
-            <label>Code Postal</label>
-            <p>{{ site.zipCode }}</p>
-          </div>
-          <div class="info-item">
-            <label>Pays</label>
-            <p>{{ site.country }}</p>
-          </div>
-          <div class="info-item">
-            <label>Téléphone</label>
-            <p>{{ site.phone || 'Non renseigné' }}</p>
-          </div>
-          <div class="info-item">
-            <label>Email</label>
-            <p>{{ site.email || 'Non renseigné' }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-section">
-        <h2>Responsable du Site</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Nom</label>
-            <p>{{ site.managerName || 'Non renseigné' }}</p>
-          </div>
-          <div class="info-item">
-            <label>Email</label>
-            <p>{{ site.managerEmail || 'Non renseigné' }}</p>
-          </div>
-          <div class="info-item">
-            <label>Téléphone</label>
-            <p>{{ site.managerPhone || 'Non renseigné' }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="site-actions">
-        <a [routerLink]="['/sites', site.id, 'weekly-rules']" class="btn btn-primary">
-          <i class="material-icons">schedule</i>
-          Gérer les Règles Hebdomadaires
-        </a>
+    <!-- version mobile : actions dans un menu simple -->
+    <div class="d-sm-none">
+      <div class="btn-group">
+        <button class="btn btn-primary" (click)="showAssign = true"><i class="bi bi-person-plus"></i></button>
+        <a class="btn btn-outline-primary" [routerLink]="['/sites', site.id, 'edit']"><i class="bi bi-pencil-square"></i></a>
+        <button class="btn btn-outline-secondary" (click)="toggleSiteStatus()">
+          <i class="bi" [ngClass]="site.active ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
+        </button>
+        <a class="btn btn-outline-secondary" routerLink="/sites"><i class="bi bi-arrow-left"></i></a>
       </div>
     </div>
+  </div>
 
-    <div class="schedules-section card">
-      <div class="section-header">
-        <h2>Plannings</h2>
-        <button class="btn btn-primary" [routerLink]="['/schedules/create']" [queryParams]="{siteId: site.id}">
-          <i class="material-icons">add</i>
-          Créer un Planning
-        </button>
-      </div>
+  <!-- Modal d’affectation -->
+  <app-assign-employee-modal
+    *ngIf="showAssign"
+    [siteId]="site?.id ?? siteId"
+    (closed)="showAssign = false"
+    (attached)="onEmployeeAttached($event)">
+  </app-assign-employee-modal>
 
-      <div *ngIf="loadingSchedules" class="loading-container">
-        <div class="spinner"></div>
-      </div>
+  <!-- États de chargement/erreur -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border" role="status"></div>
+  </div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
-      <div *ngIf="!loadingSchedules && schedules.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <i class="material-icons">event_note</i>
-        </div>
-        <p>Aucun planning n'a été créé pour ce site</p>
-        <button class="btn btn-primary" [routerLink]="['/schedules/create']" [queryParams]="{siteId: site.id}">
-          Créer un Planning
-        </button>
-      </div>
+  <!-- Contenu -->
+  <div class="row g-4" *ngIf="!loading">
+    <!-- Colonne principale -->
+    <div class="col-12 col-lg-9">
 
-      <div *ngIf="!loadingSchedules && schedules.length > 0" class="schedules-grid">
-        <div *ngFor="let schedule of schedules" class="schedule-card">
-          <div class="schedule-header">
-            <h3>{{ schedule.name }}</h3>
-            <span class="badge" [class.badge-success]="schedule.isPublished" [class.badge-warning]="!schedule.isPublished">
-              {{ schedule.isPublished ? 'Publié' : 'Brouillon' }}
-            </span>
+      <!-- Infos site -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h2 class="h6 text-muted mb-3">Informations du site</h2>
+
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+            <div class="col">
+              <small class="text-muted d-block">Adresse</small>
+              <div class="fw-semibold">{{ site.address }}</div>
+            </div>
+            <div class="col">
+              <small class="text-muted d-block">Ville</small>
+              <div class="fw-semibold">{{ site.city }}</div>
+            </div>
+            <div class="col">
+              <small class="text-muted d-block">Code postal</small>
+              <div class="fw-semibold">{{ site.zipCode }}</div>
+            </div>
+            <div class="col">
+              <small class="text-muted d-block">Pays</small>
+              <div class="fw-semibold">{{ site.country }}</div>
+            </div>
+            <div class="col">
+              <small class="text-muted d-block">Téléphone</small>
+              <div class="fw-semibold">{{ site.phone || 'Non renseigné' }}</div>
+            </div>
+            <div class="col">
+              <small class="text-muted d-block">Email</small>
+              <div class="fw-semibold text-truncate">{{ site.email || 'Non renseigné' }}</div>
+            </div>
           </div>
 
-          <div class="schedule-info">
-            <div class="info-item">
-              <i class="material-icons">calendar_today</i>
-              <span>{{ schedule.month }}/{{ schedule.year }}</span>
-            </div>
+          <hr class="my-4">
 
-            <div class="info-item">
-              <i class="material-icons">assignment_turned_in</i>
-              <span>{{ schedule.completionRate }}% complété</span>
+          <h2 class="h6 text-muted mb-3">Responsable du site</h2>
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+            <div class="col">
+              <small class="text-muted d-block">Nom</small>
+              <div class="fw-semibold">{{ site.managerName || 'Non renseigné' }}</div>
             </div>
-
-            <div class="info-item" *ngIf="schedule.isSent">
-              <i class="material-icons">mail</i>
-              <span>Envoyé le {{ schedule.sentAt | date:'dd/MM/yyyy' }}</span>
+            <div class="col">
+              <small class="text-muted d-block">Email</small>
+              <div class="fw-semibold text-truncate">{{ site.managerEmail || 'Non renseigné' }}</div>
+            </div>
+            <div class="col">
+              <small class="text-muted d-block">Téléphone</small>
+              <div class="fw-semibold">{{ site.managerPhone || 'Non renseigné' }}</div>
             </div>
           </div>
 
-          <div class="schedule-actions">
-            <a [routerLink]="['/schedules', schedule.id]" class="btn btn-outline">
-              <i class="material-icons">visibility</i>
-              Voir
-            </a>
-            <a [routerLink]="['/schedules', schedule.id, 'edit']" class="btn btn-outline" *ngIf="!schedule.isPublished">
-              <i class="material-icons">edit</i>
-              Modifier
+          <div class="d-flex flex-wrap gap-2 mt-4">
+            <a [routerLink]="['/sites', site.id, 'weekly-rules']" class="btn btn-light border">
+              <i class="bi bi-calendar-week me-1"></i> Gérer les règles hebdomadaires
             </a>
           </div>
         </div>
       </div>
+
+      <!-- Plannings -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2 class="h6 text-muted mb-0">Plannings</h2>
+            <a class="btn btn-primary"
+               [routerLink]="['/schedules/create']"
+               [queryParams]="{siteId: site.id}">
+              <i class="bi bi-plus-lg me-1"></i> Créer un planning
+            </a>
+          </div>
+
+          <div *ngIf="loadingSchedules" class="text-center py-4">
+            <div class="spinner-border" role="status"></div>
+          </div>
+
+          <div *ngIf="!loadingSchedules && schedules.length === 0" class="text-center py-5">
+            <div class="display-6 mb-2 opacity-50"><i class="bi bi-calendar2-week"></i></div>
+            <p class="text-muted mb-3">Aucun planning n'a été créé pour ce site.</p>
+            <a class="btn btn-outline-primary"
+               [routerLink]="['/schedules/create']"
+               [queryParams]="{siteId: site.id}">
+              Créer un planning
+            </a>
+          </div>
+
+          <div *ngIf="!loadingSchedules && schedules.length > 0"
+               class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+            <div class="col" *ngFor="let schedule of schedules">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h3 class="h6 mb-0">{{ schedule.name }}</h3>
+                    <span class="badge"
+                      [ngClass]="schedule.isPublished ? 'bg-success' : 'bg-secondary'">
+                      {{ schedule.isPublished ? 'Publié' : 'Brouillon' }}
+                    </span>
+                  </div>
+
+                  <div class="small text-muted mb-3 d-flex flex-wrap gap-3">
+                    <span><i class="bi bi-calendar-event me-1"></i>{{ schedule.month }}/{{ schedule.year }}</span>
+                    <span><i class="bi bi-check2-circle me-1"></i>{{ schedule.completionRate }}% complété</span>
+                    <span *ngIf="schedule.isSent"><i class="bi bi-envelope me-1"></i>Envoyé le {{ schedule.sentAt | date:'dd/MM/yyyy' }}</span>
+                  </div>
+
+                  <div class="mt-auto d-flex gap-2">
+                    <a class="btn btn-light border" [routerLink]="['/schedules', schedule.id]">
+                      <i class="bi bi-eye me-1"></i> Voir
+                    </a>
+                    <a class="btn btn-outline-primary" *ngIf="!schedule.isPublished"
+                       [routerLink]="['/schedules', schedule.id, 'edit']">
+                      <i class="bi bi-pencil-square me-1"></i> Modifier
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div> <!-- /col -->
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Colonne latérale (sticky) -->
+    <aside class="col-12 col-lg-3">
+      <div class="card shadow-sm sticky-lg-top" style="top:84px">
+        <div class="card-body">
+          <h3 class="h6 mb-3">Actions rapides</h3>
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" (click)="showAssign = true">
+              <i class="bi bi-person-plus me-1"></i> Affecter un employé
+            </button>
+            <a class="btn btn-light border" [routerLink]="['/sites', site.id, 'edit']">
+              <i class="bi bi-pencil-square me-1"></i> Modifier le site
+            </a>
+            <button class="btn btn-outline-secondary" (click)="toggleSiteStatus()">
+              <i class="bi" [ngClass]="site.active ? 'bi-toggle-off me-1' : 'bi-toggle-on me-1'"></i>
+              {{ site.active ? 'Désactiver' : 'Activer' }}
+            </button>
+          </div>
+
+          <hr class="my-4">
+
+          <h4 class="h6 text-muted mb-2">Contact</h4>
+          <div class="small">
+            <div><i class="bi bi-geo-alt me-1"></i> {{ site.address }}, {{ site.zipCode }} {{ site.city }}</div>
+            <div *ngIf="site.phone"><i class="bi bi-telephone me-1"></i> {{ site.phone }}</div>
+            <div *ngIf="site.email"><i class="bi bi-envelope me-1"></i> {{ site.email }}</div>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 </div>

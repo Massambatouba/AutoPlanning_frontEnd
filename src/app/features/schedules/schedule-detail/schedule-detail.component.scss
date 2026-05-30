@@ -1,180 +1,259 @@
-/*  ↓↓↓  colle TOUT ce bloc dans schedule-detail.component.css  ↓↓↓ */
+/* ============ Thème local ============ */
+.schedule-detail {
+  /* Palette (assortie à la sidebar) */
+  --brand:        #2563eb; /* Indigo 600 */
+  --brand-700:    #1d4ed8;
+  --accent:       #f59e0b; /* Amber 500 */
+  --surface:      #ffffff;
+  --surface-alt:  #f8fafc;
+  --border:       #e5e7eb;
+  --text:         #0f172a;
+  --text-sec:     #64748b;
+  --ok:           #16a34a;
+  --ko:           #ef4444;
 
-/* ---------- variables locales (CSS natif) ------------ */
-:host {
-  --border:   #dee2e6;
-  --surface:  #ffffff;
-  --surface-alt: #f8f9fa;
-  --brand:    #0d6efd;
-  --head:     #ffb300;
-  --dispo:    #8bc34a;
-  --indispo:  #f44336;
+  color: var(--text);
 }
 
-/* ---------- barre du haut ----------------------------- */
-.topbar{
-  position:sticky;top:0;z-index:10;
-  display:flex;justify-content:space-between;align-items:center;
-  padding:.75rem 1rem;
-  background:var(--surface-alt);
-  border-bottom:1px solid var(--border);
-}
-.left{display:flex;align-items:center;gap:1rem;}
-.btn-back{border:0;background:none;color:var(--brand);display:flex;align-items:center;gap:.35rem}
-
-/* ---------- KPI --------------------------------------- */
-.stats-grid{display:grid;gap:1rem;margin:1rem 1rem 0;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
-.card{
-  background:var(--surface);border-radius:.75rem;
-  box-shadow:0 1px 3px rgba(0,0,0,.05);
-  padding:1rem 1.25rem;
-}
-.card .value{font-size:1.75rem;font-weight:700}
-
-/* ---------- tableau plan ------------------------------- */
-.schedule-table{width:100%;border-collapse:collapse}
-.schedule-table thead th,
-.schedule-table tbody td{font-size:.75rem; min-width: 72px;padding:.3rem .25rem;border:1px solid var(--border)}
-.schedule-table thead th{background:var(--surface-alt)}
-.legend-row th{background:var(--head);color:#fff}
-.legend-dispo{background:var(--dispo)!important;color:#fff}
-.legend-indispo{background:var(--indispo)!important;color:#fff}
-
-.sticky-col{
-  position:sticky;left:0;z-index:3;
-  background:#fff;min-width:180px;text-align:left
+/* ============ Topbar ============ */
+.schedule-detail .topbar{
+  position: sticky; top: 0; z-index: 20;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .85rem 1rem;
+  margin: .75rem 0 1rem;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: .8rem;
+  box-shadow: 0 6px 18px rgba(2,6,23,.06);
 }
 
-/* les cases montent le contenu en haut */
-.schedule-table tbody td{ vertical-align: top; }
+.schedule-detail .left{display:flex;align-items:center;gap:1rem}
+.schedule-detail .title-group h1{
+  margin:0; font-size:1.25rem; font-weight:700; color:var(--text);
+}
+.schedule-detail .title-group .meta{
+  font-size:.875rem; color:var(--text-sec);
+}
 
+/* Boutons cohérents */
+.schedule-detail .btn{
+  display:inline-flex; align-items:center; gap:.4rem;
+  border-radius:.65rem; font-weight:600; border:1px solid transparent;
+  padding:.55rem .9rem; cursor:pointer; line-height:1;
+  transition: .15s ease;
+}
+.schedule-detail .btn.ghost{ color:var(--text-sec); background:transparent; }
+.schedule-detail .btn.ghost:hover{ background:var(--surface-alt); }
 
-.schedule-table td .slot{
-  display:block;             /* <- plus inline-flex */
-  width:100%;
-  min-height:22px;
-  margin-bottom:4px;         /* espace entre 2 vacations */
-  padding:0 .35rem;
+.schedule-detail .btn.success{
+  background:var(--accent); color:#111827;
+}
+.schedule-detail .btn.success:hover{ filter: brightness(.93); }
+
+.schedule-detail .btn.primary{
+  background:var(--brand); color:#fff;
+}
+.schedule-detail .btn.primary:hover{ background:var(--brand-700); }
+
+.schedule-detail .btn.btn-back{
+  color:var(--brand); background:transparent; border:0; padding:0;
+}
+.schedule-detail .btn.btn-back:hover{ opacity:.8 }
+
+/* ============ KPI cards ============ */
+.schedule-detail .stats-grid{
+  display:grid; gap:1rem; margin:0 0 1rem;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+}
+.schedule-detail .card{
+  background:var(--surface);
   border:1px solid var(--border);
-  border-radius:4px;
-  background:rgba(13,110,253,.08);
-  color:#0d6efd;
-  font-size:12px;
-  line-height:20px;          
+  border-radius:.9rem; padding:1rem 1.1rem;
+  box-shadow: 0 4px 14px rgba(2,6,23,.05);
+}
+.schedule-detail .card-head{
+  font-weight:600; color:var(--text-sec); margin-bottom:.25rem; display:flex; gap:.5rem; align-items:center;
+}
+.schedule-detail .card .value{ font-size:1.65rem; font-weight:800; color:var(--text); }
+
+/* ============ Liste employés du site ============ */
+.schedule-detail .list-group-item{
+  border:1px solid var(--border);
+}
+.schedule-detail .list-group-item + .list-group-item{ border-top:0; }
+
+/* ============ Tableau planning ============ */
+.schedule-detail .plan-wrapper{
+  overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
+  width:100%; padding-bottom:.5rem; margin-top: .75rem;
+}
+.schedule-detail .schedule-table{
+  width:100%; border-collapse:separate; border-spacing:0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:.9rem;
+}
+.schedule-detail .schedule-table thead th,
+.schedule-detail .schedule-table tbody td{
+  font-size:.78rem; padding:.35rem .35rem;
+  border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border);
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
 }
-.schedule-table td .slot:last-child{ margin-bottom:0; }
-
-/* (tes couleurs par type restent) */
-.schedule-table td .slot[data-type="ADS"]{
-  border-color:#0d6efd; color:#0d6efd; background:rgba(13,110,253,.10);
+.schedule-detail .schedule-table thead th{
+  background:var(--surface-alt); color:var(--text);
 }
-.schedule-table td .slot[data-type="CHEF_DE_POSTE"]{
-  border-color:#f59f00; color:#f59f00; background:rgba(245,159,0,.10);
+.schedule-detail .legend-row th{
+  background: linear-gradient(180deg,#10b981 0%,#059669 100%); /* sera override par KO */
+  color:#fff; border-color:transparent;
 }
-
-
-.schedule-table td .slot[data-type="ADS"] {
-  border-color: #0d6efd;
-  color: #0d6efd;
-  background: rgba(13,110,253,.10);
-}
-.schedule-table td .slot[data-type="CHEF_DE_POSTE"] {
-  border-color: #f59f00;
-  color: #f59f00;
-  background: rgba(245,159,0,.10);
+.schedule-detail .legend-row th.bg-danger{
+  background: linear-gradient(180deg,#ef4444 0%,#dc2626 100%) !important;
 }
 
-.avatar{width:25px;height:25px;border-radius:50%;background:var(--brand);
-  color:#fff;font-size:.65rem;display:inline-flex;align-items:center;justify-content:center;margin-right:.3rem}
-
-/* slots (= vacations) ---------------------------------- */
-// .slot{
-//   display:block;
-//   margin-bottom:2px;
-//   border:1px solid var(--border);
-//   border-radius:.25rem;
-//   padding:0 2px;
-//   cursor:pointer;
-//   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
-// }
-.slot:hover{background:var(--surface-alt)}
-[data-type="ADS"]{background:#e3f2fd;border-color:#2196f3}
-[data-type="CHEF_DE_POSTE"]{background:#fff3e0;border-color:#ff9800}
-
-/* slot vide --------------------------------------------- */
-.slot-empty{
-  width:100%;height:18px;
-  border:1px dashed var(--border);
-  background:transparent;color:var(--border);
-  font-size:.75rem;line-height:16px;text-align:center;
-  cursor:pointer
+.schedule-detail .day-row th{
+  text-transform: lowercase;
+  font-weight:700;
 }
-.legend-row i.bi-check-lg {
-  font-size: 1.1rem;
-  line-height: 1;
+.schedule-detail .day-row .dow{ font-size:.7rem; color:var(--text-sec) }
+.schedule-detail .day-row .num{ font-size:.95rem }
+
+.schedule-detail .sticky-col{
+  position:sticky; left:0; z-index:3; background:var(--surface);
+  min-width:190px; text-align:left; font-weight:600;
 }
 
-/* extrait schedule-detail.component.scss */
-.btn {
-  /* style commun */
-  display: flex; align-items: center; gap: .35rem;
-  padding: .55rem 1rem; border: none; border-radius: .6rem;
-  font-weight: 600; cursor: pointer;
-  background-color: #ff9800;
+/* Slots (vacations) pill-style */
+.schedule-detail .slot{
+  display:block; width:100%;
+  margin-bottom:4px; padding:.15rem .4rem;
+  border:1px solid var(--border);
+  border-radius:.5rem;
+  background: rgba(37,99,235,.08); color: var(--brand);
+  font-size:.72rem; line-height:1.25rem;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.schedule-detail .slot:last-child{ margin-bottom:0; }
+.schedule-detail .slot:hover{ background:var(--surface-alt); }
 
-  &.ghost   { background: none;             color: var(--text-sec);
-              &:hover { background: var(--surface-alt); } }
+/* 1) Slot par défaut NEUTRE (pas de bleu) */
+.schedule-detail .slot{
+  display:block; width:100%;
+  margin-bottom:4px; padding:.15rem .55rem .15rem .6rem; /* un peu plus à gauche pour la barre */
+  position: relative;
+  border:1px solid var(--border);
+  border-radius:.5rem;
+  background: var(--surface-alt);      /* <- neutre */
+  color: var(--text);                  /* <- neutre */
+  font-size:.72rem; line-height:1.25rem;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.schedule-detail .slot:last-child{ margin-bottom:0; }
+.schedule-detail .slot:hover{ background:#eef2f7; }
 
-  &.success { background: var(--success); background-color: #ff9800;   color: white;
-              &:hover { filter: brightness(.9); } }
+/* Barre d’accent (prend la couleur du texte du slot) */
+.schedule-detail .slot::before{
+  content:""; position:absolute; left:4px; top:4px; bottom:4px; width:3px;
+  border-radius:2px; background: currentColor; opacity:.9;
 }
 
-/* le conteneur de la table devient scrollable en X */
-.plan-wrapper{
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-  padding-bottom: .5rem;   /* laisse la place au scrollbar */
+/* 2) Palette contrastée (hues distinctes) */
+.schedule-detail .slot[data-type="ADS"]{
+  color:#2563eb;                           /* Indigo */
+  background: rgba(37,99,235,.12);
+  border-color:#bfdbfe;
+}
+.schedule-detail .slot[data-type="CHEF_DE_POSTE"]{
+  color:#f59e0b;                           /* Amber/Orange */
+  background: rgba(245,158,11,.15);
+  border-color:#fcd34d;
+}
+.schedule-detail .slot[data-type="CHEF_DE_EQUIPE"]{
+  color:#10b981;                           /* Emerald */
+  background: rgba(16,185,129,.14);
+  border-color:#a7f3d0;
+}
+.schedule-detail .slot[data-type="SSIAP1"]{
+  color:#ff0000;                           /* Cyan */
+  background: rgba(6,182,212,.14);
+  border-color:#a5f3fc;
+}
+.schedule-detail .slot[data-type="SSIAP2"]{
+  color:#8b5cf6;                           /* Violet (AU LIEU de bleu) */
+  background: rgba(139,92,246,.14);
+  border-color:#ddd6fe;
+}
+.schedule-detail .slot[data-type="SSIAP3"]{
+  color:#334155;                           /* Slate foncé */
+  background: rgba(51,65,85,.10);
+  border-color:#cbd5e1;
+}
+.schedule-detail .slot[data-type="RONDE"]{
+  color:#14b8a6;                           /* Teal (AU LIEU de bleu) */
+  background: rgba(20,184,166,.14);
+  border-color:#99f6e4;
+}
+.schedule-detail .slot[data-type="ASTREINTE"]{
+  color:#ef4444;                           /* Rouge vif */
+  background: rgba(239,68,68,.12);
+  border-color:#fecaca;
+}
+.schedule-detail .slot[data-type="FORMATION"]{
+  color:#ec4899;                           /* Rose (AU LIEU de cyan) */
+  background: rgba(236,72,153,.12);
+  border-color:#fbcfe8;
+}
+
+/* 3) Légende synchronisée (mêmes teintes) */
+.item { display:flex; align-items:center; gap:.35rem; font-size:.8125rem; }
+.dot  { width:12px; height:12px; border-radius:50%; background: currentColor; }
+
+.item[data-type="ADS"]            { color:#2563eb; }
+.item[data-type="CHEF_DE_POSTE"]  { color:#f59e0b; }
+.item[data-type="CHEF_DE_EQUIPE"] { color:#10b981; }
+.item[data-type="SSIAP1"]         { color:#ff0000; }
+.item[data-type="SSIAP2"]         { color:#8b5cf6; }  /* violet */
+.item[data-type="SSIAP3"]         { color:#334155; }
+.item[data-type="RONDE"]          { color:#14b8a6; }  /* teal */
+.item[data-type="ASTREINTE"]      { color:#ef4444; }
+.item[data-type="FORMATION"]      { color:#ec4899; }  /* rose */
+
+
+
+/* Case vide */
+.schedule-detail .slot-empty{
+  width:100%; height:22px; border:1px dashed var(--border);
+  border-radius:.5rem; background:transparent; color:#cbd5e1;
+  font-size:.72rem; line-height:20px; text-align:center; cursor:pointer;
+}
+.schedule-detail .slot-empty:hover{ background:var(--surface-alt); color:var(--brand); }
+
+/* Jour en manque de couverture */
+.schedule-detail td.gap, .schedule-detail .slot-empty.gap{
+  background:#fff1f2;
+}
+
+/* Avatar initiales */
+.schedule-detail .avatar{
+  width:26px; height:26px; border-radius:50%;
+  background:var(--brand); color:#fff; font-size:.7rem;
+  display:inline-flex; align-items:center; justify-content:center; margin-right:.4rem;
 }
 
 
-
-
-.slot-empty:hover{background:var(--surface-alt);color:var(--brand)}
-
-/* besoin non couvert ------------------------------------ */
-td.gap,.slot-empty.gap{background:#ffebee;border-color:#e53935}
-
-/* légende ------------------------------------------------ */
-.legend{margin:1rem}
-.legend h3{font-size:1rem;font-weight:600;margin-bottom:.5rem}
-.items{display:flex;flex-wrap:wrap;gap:.75rem 1rem}
-.item{display:flex;align-items:center;gap:.35rem;font-size:.8125rem}
-.dot{width:12px;height:12px;border-radius:50%;background:currentColor}
-.item[data-type="ADS"]{color:#2196f3}
-.item[data-type="CHEF_DE_POSTE"]{color:#ff9800}
-
-/* responsive vite-fait ---------------------------------- */
-@media(max-width:992px){
-  //.sticky-col{min-width:150px}
-  .schedule-table thead th,
-  .schedule-table tbody td{min-width:60px}
-}
-
+/* Tooltips “vacations manquantes” lisibles */
 .missing-tip .tooltip-inner{
-  white-space: normal;     
-  text-align: left;
-  min-width: 240px;
-  padding: .5rem .75rem;
-  font-size: .85rem;
+  white-space: normal; text-align: left; min-width: 240px;
+  padding: .55rem .7rem; font-size: .84rem;
 }
-.missing-box ul li{ margin-bottom:.25rem; }
-.missing-box ul li:last-child{ margin-bottom:0; }
 
-.missing-tip .tooltip-inner { white-space: pre-line; text-align: left; min-width: 220px; }
+/* Joli scrollbar horizontal (WebKit) */
+.schedule-detail .plan-wrapper::-webkit-scrollbar{ height:10px }
+.schedule-detail .plan-wrapper::-webkit-scrollbar-thumb{
+  background:#cbd5e1; border-radius:999px;
+}
+.schedule-detail .plan-wrapper::-webkit-scrollbar-track{
+  background:transparent;
+}
 

@@ -89,6 +89,51 @@ error = '';
 viewMode: 'week' | 'month' = 'week';
 currentWeekStart = new Date();
 
+
+private toMin(t: string): number {
+  const [h, m] = (t || '00:00').split(':').map(Number);
+  return h * 60 + m;
+}
+
+private hasLocalOverlap(empId: number, dayIso: string, start: string, end: string, skipId?: number): boolean {
+  const s = this.toMin(start);
+  let e = this.toMin(end);
+  if (e <= s) e += 24 * 60; // gère le passage minuit
+
+  return this.assignments.some(a => {
+    if (a.employeeId !== empId) return false;
+    if (this.getAssignmentDay(a) !== dayIso) return false;
+    if (skipId && a.id === skipId) return false;
+
+    const as = this.toMin(a.startTime);
+    let ae = this.toMin(a.endTime);
+    if (ae <= as) ae += 24 * 60;
+
+    // overlap si l'intersection est non vide
+    return Math.max(s, as) < Math.min(e, ae);
+  });
+}
+
+private extractErrMsg(err: any): string {
+  if (!err) return 'Erreur inconnue';
+
+  // cas ProblemDetail Spring 6 (JSON)
+  if (err.error?.detail) return err.error.detail;
+  if (err.error?.message) return err.error.message;
+  if (typeof err.error === 'string' && err.error.trim()) return err.error;
+  if (err.message) return err.message;
+
+  // Si le backend renvoie une page HTML (Blob), essayer d’interpréter
+  if (err.error instanceof Blob) {
+    // On ne peut pas faire un FileReader sync ici -> renvoyer un libellé générique exploitable
+    return `Erreur serveur ${err.status || ''} — impossible de lire la réponse.`;
+  }
+
+  return 'Action impossible';
+}
+
+
+
 private pad(n: number) { return String(n).padStart(2, '0'); }
 /** formate un Date local en YYYY-MM-DD (sans UTC) */
 private formatIsoDate(d: Date): string {
@@ -275,19 +320,28 @@ badgeClass(t: string) {
   switch (t) {
     case 'ADS': return 'bg-primary';
     case 'CHEF_DE_POSTE': return 'bg-warning text-dark';
-    case 'SSIAP1': return 'bg-info text-dark';
+    case 'SSIAP1': return 'bg-dark text-dark';
     case 'SSIAP2': return 'bg-primary';
     case 'SSIAP3': return 'bg-dark';
     default: return 'bg-secondary';
   }
 }
 
+private typeOrder = [
+  'ADS', 'CHEF_DE_POSTE', 'CHEF_DE_EQUIPE',
+  'SSIAP1', 'SSIAP2', 'SSIAP3',
+  'RONDE', 'ASTREINTE', 'FORMATION'
+];
+
+displayedAgentTypes: string[] = [];
+
+
 
 ngOnDestroy(): void {
     this.refreshSub?.unsubscribe();
 }
 
-  openAddModal(dayIso: string, empId: number) {
+openAddModal(dayIso: string, empId: number) {
   if (!this.schedule) return;
 
   this.mode = 'add';
@@ -302,7 +356,12 @@ ngOnDestroy(): void {
     endTime:    '',
     agentType:  'ADS',
     notes:      ''
-  });
+  }
+);
+
+  // 🔑 nettoie erreurs éventuelles (form + champs)
+  this.addForm.setErrors(null);
+  ['startTime','endTime'].forEach(c => this.addForm.get(c)?.setErrors(null));
 
   this.modalRef = this.modalService.open(this.assignmentModalTpl, { backdrop: 'static' });
 }
@@ -323,26 +382,60 @@ openEditModal(a: ScheduleAssignment, e: MouseEvent) {
     notes:      a.notes ?? ''
   });
 
+  // 🔑 nettoie erreurs éventuelles (form + champs)
+  this.addForm.setErrors(null);
+  ['startTime','endTime'].forEach(c => this.addForm.get(c)?.setErrors(null));
+
   this.modalRef = this.modalService.open(this.assignmentModalTpl, { backdrop: 'static' });
 }
+
 
 submitModal() {
   if (!this.schedule || this.addForm.invalid) return;
 
-  // Form value au format attendu par l’API
-  const payload = this.addForm.getRawValue() as ScheduleAssignmentRequest & { employeeId: number };
+  const v = this.addForm.getRawValue() as ScheduleAssignmentRequest & { employeeId: number };
+  const skipId = this.mode === 'edit' ? this.editing?.id : undefined;
 
-  if (this.mode === 'add') {
-    this.assignmentSrv.addAssignment(this.schedule.id, payload).subscribe({
-      next: () => { this.modalRef?.close(); this.loadAssignments(); },
-      error: (err) => this.toastr.error(err.error?.message || err.message)
-    });
-  } else if (this.editing) {
-    this.assignmentSrv.updateAssignment(this.schedule.id, this.editing.id, payload).subscribe({
-      next: () => { this.modalRef?.close(); this.loadAssignments(); },
-      error: (err) => this.toastr.error(err.error?.message || err.message)
-    });
+  // 🔎 Pré-contrôle local (chevauchement dans CE planning)
+  if (this.hasLocalOverlap(v.employeeId, v.date, v.startTime, v.endTime, skipId)) {
+    this.addForm.setErrors({ overlap: true });
+    this.addForm.get('startTime')?.setErrors({ overlap: true });
+    this.addForm.get('endTime')?.setErrors({ overlap: true });
+
+    this.toastr.warning(
+      "Conflit horaire : cet employé a déjà une vacation qui chevauche ce créneau dans ce planning."
+    );
+    return;
   }
+
+  // 🚀 Appel API (le back détecte aussi les conflits sur d'autres plannings/sites)
+  const req$ = this.mode === 'add'
+    ? this.assignmentSrv.addAssignment(this.schedule.id, v)
+    : this.assignmentSrv.updateAssignment(this.schedule.id, this.editing!.id, v);
+
+  req$.subscribe({
+    next: () => {
+      this.modalRef?.close();
+      this.loadAssignments();
+      this.toastr.success('Vacation enregistrée.');
+    },
+    error: (err) => {
+      const msg = this.extractErrMsg(err);
+
+      // Si le back renvoie le conflit (ex: 409 + "Chevauchement ..."), marque le form en erreur
+      if (err?.status === 409 || /chevauch/i.test(msg)) {
+        this.addForm.setErrors({ overlap: true });
+        this.addForm.get('startTime')?.setErrors({ overlap: true });
+        this.addForm.get('endTime')?.setErrors({ overlap: true });
+
+        this.toastr.error(
+          msg || "Conflit horaire : l'employé est déjà affecté sur ce créneau (peut-être sur un autre site/planning)."
+        );
+      } else {
+        this.toastr.error(msg || 'Impossible d’enregistrer la vacation');
+      }
+    }
+  });
 }
 
 deleteFromModal() {
@@ -372,7 +465,7 @@ private loadSchedule(id: number): void {
           'published:', this.schedule?.isPublished, 'sent:', this.schedule?.isSent);
 
         // ⬇️ NE PLUS LIRE s.assignments (il n'existe plus sur Schedule)
-        this.assignments = []; 
+        this.assignments = [];
       }),
       finalize(() => this.loadingSchedule = false)
     )
@@ -807,6 +900,28 @@ neededDetail.forEach((need, k) => {
     this.missingDetails[day].push({ agentType, startTime: start, endTime: end, needed: need, have, missing });
   }
 });
+
+// ---- LÉGENDE DYNAMIQUE -------------------------------------------
+// 1) types vus dans les affectations existantes
+const typesFromAssignments = new Set(
+  (this.assignments || [])
+    .map(a => a.agentType)
+    .filter((t): t is string => !!t)
+);
+
+// 2) types requis par règles + exceptions (même s’il n’y a pas encore d’affectation)
+const typesFromNeeds = new Set<string>();
+neededDetail.forEach((count, key) => {
+  if ((count ?? 0) > 0) {
+    const [, agentType] = key.split('|');
+    if (agentType) typesFromNeeds.add(agentType);
+  }
+});
+
+// 3) union + tri cohérent
+const allTypes = new Set<string>([...typesFromAssignments, ...typesFromNeeds]);
+this.displayedAgentTypes = this.typeOrder.filter(t => allTypes.has(t));
+
 
 // 5-d) gaps + total manquant par jour (inchangé)
 this.coverageGap = {};

@@ -1,31 +1,47 @@
 <nav
-  class="offcanvas offcanvas-start bg-light border-end"
-  [class.show]="isOpen"
-  tabindex="-1"
-  [style.visibility]="isOpen ? 'visible' : 'hidden'"
+  class="sidenav"
+  [class.collapsed]="!isOpen"
+  role="navigation"
+  aria-label="Barre latérale"
 >
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title">Menu</h5>
-    <button type="button" class="btn-close" (click)="toggle()" aria-label="Close"></button>
+  <!-- En-tête / logo -->
+  <div class="brand">
+    <div class="logo">AP</div>
+    <span class="brand-text" *ngIf="isOpen">AutoPlanning</span>
+
+    <button class="btn-toggle" type="button" (click)="toggle()" [attr.aria-label]="isOpen ? 'Réduire' : 'Développer'">
+      <i-lucide [name]="isOpen ? 'chevron-left' : 'chevron-right'" [size]="20"></i-lucide>
+    </button>
   </div>
-  <div class="offcanvas-body p-0">
-    <ul class="nav nav-pills flex-column">
-      <li class="nav-item" *ngFor="let item of navItems">
-        <a
-          class="nav-link d-flex align-items-center"
-          [routerLink]="item.route"
-          routerLinkActive="active"
-          [class.active]="isActive(item.route)"
-        >
-          <i-lucide
-            [name]="item.icon"
-            class="me-2"
-            [size]="20"
-          ></i-lucide>
-          <span>{{ item.label }}</span>
-        </a>
-      </li>
-    </ul>
+
+  <!-- Navigation -->
+  <div class="nav-group">
+    <div class="nav-label" *ngIf="isOpen">Navigation</div>
+
+    <a
+      *ngFor="let item of navItems; trackBy: trackByRoute"
+      class="nav-link"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: false }"
+    >
+      <i-lucide class="icon" [name]="item.icon" [size]="20"></i-lucide>
+      <span class="text" *ngIf="isOpen">{{ item.label }}</span>
+    </a>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- Pied de barre : paramètres / déconnexion -->
+  <div class="footer">
+    <a class="nav-link" routerLink="/settings" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <i-lucide class="icon" name="settings" [size]="20"></i-lucide>
+      <span class="text" *ngIf="isOpen">Paramètres</span>
+    </a>
+
+    <button class="nav-link btn-logout" type="button" (click)="logout()">
+      <i-lucide class="icon" name="log-out" [size]="20"></i-lucide>
+      <span class="text" *ngIf="isOpen">Déconnexion</span>
+    </button>
   </div>
 </nav>
-

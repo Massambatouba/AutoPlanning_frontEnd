@@ -1,5 +1,5 @@
-<!-- top-bar ────────────────────────────────────────────────────────── -->
-<div class="schedule-container">
+
+<div class="container schedule-detail">
 <nav class="topbar" *ngIf="schedule">
   <div class="left">
     <button class="btn btn-back" routerLink="/schedules">
@@ -37,7 +37,7 @@
 
 
     <!-- NOUVEAU : envoi groupé -->
-    <button class="btn primary" 
+    <button class="btn primary"
         (click)="sendScheduleAll()"
         [disabled]="sendingAll || !assignments.length || !canSendAll">
       <span *ngIf="sendingAll" class="spinner-border spinner-border-sm me-1"></span>
@@ -166,6 +166,14 @@
         <input type="time" class="form-control" formControlName="endTime" required />
       </div>
 
+      <div class="col-12" *ngIf="addForm.errors?.['overlap']">
+        <div class="alert alert-danger py-2 px-3 mb-2">
+          Conflit : cet employé a déjà une vacation qui chevauche ce créneau.
+        </div>
+      </div>
+
+
+
       <div class="col-md-6">
         <label class="form-label">Type d'agent</label>
         <select class="form-select" formControlName="agentType" required>
@@ -209,7 +217,7 @@
 <!-- tableau mensuel compact ───────────────────────────────────────── -->
 <div class="plan-wrapper" *ngIf="!loadingSchedule && schedule">
   <table class="schedule-table table table-bordered text-center">
-   
+
 <thead>
   <!-- ligne couverture -->
   <tr class="legend-row">
@@ -218,7 +226,7 @@
   <th [ngClass]="isCovered(d) ? 'bg-success text-white' : 'bg-danger text-white'">
     <span
       class="d-inline-block px-1 fw-bold"
-      [ngbTooltip]="isCovered(d) ? null : missingTpl" 
+      [ngbTooltip]="isCovered(d) ? null : missingTpl"
       container="body"
       tooltipClass="missing-tip"
       triggers="mouseenter:mouseleave">
@@ -299,18 +307,18 @@
 </div>
 
 <!-- légende des couleurs ------------------------------------------- -->
-<div class="legend">
+<!-- légende des couleurs (dynamique) -->
+<div class="legend" *ngIf="displayedAgentTypes.length">
   <h3>Légende</h3>
   <div class="items">
-    <span class="item" data-type="ADS">
-      <span class="dot"></span> ADS
+    <span class="item"
+          *ngFor="let t of displayedAgentTypes"
+          [attr.data-type]="t">
+      <span class="dot"></span> {{ labelFor(t) }}
     </span>
-    <span class="item" data-type="CHEF_DE_POSTE">
-      <span class="dot"></span> Chef de poste
-    </span>
-    <!-- …complète tes autres types ici… -->
   </div>
 </div>
+
 </div>
 
 

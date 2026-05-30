@@ -391,5 +391,25 @@ h1, h2, h3 { margin: 0 0 .5rem 0; line-height: 1.2; }
     overflow:     visible !important;
   }
 }
+/* --- Impression / Export PDF --- */
+@media print {
+  /* Masquer toute la chrome de l'app */
+  app-sidenav, .sidenav, .sidebar, .offcanvas,
+  .topbar, .app-header, .app-footer, .breadcrumbs,
+  .filters, .btn, .no-print {
+    display: none !important;
+  }
+
+  /* Le tableau s’imprime proprement */
+  .plan-wrapper { overflow: visible !important; }
+  .sticky-col   { position: static !important; } /* le sticky imprime mal */
+  .schedule-table { border-collapse: collapse !important; }
+  .schedule-table th, .schedule-table td {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+
+}
 
 

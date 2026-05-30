@@ -91,4 +91,25 @@
     #ffd364 8px, #ffd364 16px
   );
 }
+/* largeur max élégante */
+.container-xxl.site-detail-page { max-width: 1320px; }
+
+/* cartes */
+.site-detail-page .card { border-radius: .75rem; }
+.site-detail-page .card-body { padding: 1.25rem 1.5rem; }
+
+/* inputs/boutons confort tactile (si formulaires contextuels) */
+.site-detail-page .btn { min-height: 42px; }
+
+/* badges lisibles sur fond clair */
+.badge.bg-warning { color: #212529 !important; }
+
+/* sticky sidebar offset – adapte si ton header fixe est plus haut */
+@media (min-width: 992px) {
+  .site-detail-page .sticky-lg-top { top: 84px; }
+}
+
+/* état vide – icône un peu plus grande */
+.site-detail-page .display-6 { font-size: 2.25rem; }
+
 

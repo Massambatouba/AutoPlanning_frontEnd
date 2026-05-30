@@ -1,82 +1,117 @@
-<div class="schedule-create-container">
-  <header class="page-header">
-    <h1>Créer un Nouveau Planning</h1>
-    <button class="btn btn-outline" routerLink="/schedules">
-      <i class="material-icons">arrow_back</i> Retour
-    </button>
-  </header>
+<!-- large & responsive -->
+<div class="container-xxl py-4 page-create-planning">
 
-  <div class="card">
-    <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+  <!-- En-tête -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Créer un planning</h1>
 
-    <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()" class="schedule-form" novalidate>
-      <div class="form-group">
-        <label class="form-label">Nom du Planning</label>
-        <input class="form-control" formControlName="name" placeholder="Ex: Site X - 09/2025" />
-      </div>
+    <!-- bouton retour : visible dès ≥ sm, et un bouton plein écran sur mobile -->
+    <a routerLink="/schedules"
+       class="btn btn-outline-secondary d-none d-sm-inline-flex align-items-center">
+      <i class="bi bi-arrow-left me-2"></i> Retour
+    </a>
+    <a routerLink="/schedules"
+       class="btn btn-outline-secondary w-100 d-sm-none">
+      Retour
+    </a>
+  </div>
 
-      <div class="form-group">
-        <label class="form-label">Site</label>
-        <select class="form-control" formControlName="siteId">
-          <option value="">Sélectionnez un site</option>
-          <option *ngFor="let site of listSites" [value]="site.id">{{ site.name }}</option>
-        </select>
-      </div>
+  <div class="row g-4">
+    <!-- Colonne FORMULAIRE -->
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()" novalidate>
 
-      <!-- NOUVEAU : choix du type -->
-      <div class="form-group">
-        <label class="form-label">Périmètre *</label>
-        <div class="btn-group" role="group">
-          <input type="radio" id="m-month" class="btn-check" value="MONTH" formControlName="mode">
-          <label for="m-month" class="btn btn-outline-primary">Mensuel</label>
+            <div class="mb-3">
+              <label class="form-label">Nom du planning</label>
+              <input class="form-control"
+                     formControlName="name"
+                     placeholder="Ex : Arpajon – 09/2025" />
+            </div>
 
-          <input type="radio" id="m-range" class="btn-check" value="RANGE" formControlName="mode">
-          <label for="m-range" class="btn btn-outline-primary">Période</label>
+            <div class="mb-3">
+              <label class="form-label">Site</label>
+              <select class="form-select" formControlName="siteId">
+                <option value="">Sélectionnez un site</option>
+                <option *ngFor="let site of listSites" [value]="site.id">
+                  {{ site.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label d-block">Périmètre *</label>
+              <div class="btn-group" role="group" aria-label="Périmètre">
+                <input type="radio" id="modeMonth" class="btn-check" value="MONTH" formControlName="mode">
+                <label for="modeMonth" class="btn btn-outline-primary">Mensuel</label>
+
+                <input type="radio" id="modeRange" class="btn-check" value="RANGE" formControlName="mode">
+                <label for="modeRange" class="btn btn-outline-primary">Période</label>
+              </div>
+            </div>
+
+            <!-- Bloc Mensuel -->
+            <div class="row g-3" *ngIf="scheduleForm.value.mode === 'MONTH'">
+              <div class="col-12 col-md-6">
+                <label class="form-label">Mois</label>
+                <select class="form-select" formControlName="month">
+                  <option value="">Sélectionnez un mois</option>
+                  <option *ngFor="let m of getMonths()" [value]="m.value">{{ m.label }}</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Année</label>
+                <select class="form-select" formControlName="year">
+                  <option value="">Sélectionnez une année</option>
+                  <option *ngFor="let y of getYears()" [value]="y">{{ y }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Bloc Période -->
+            <div class="row g-3" *ngIf="scheduleForm.value.mode === 'RANGE'">
+              <div class="col-12 col-md-6">
+                <label class="form-label">Début</label>
+                <input type="date" class="form-control" formControlName="startDate" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Fin</label>
+                <input type="date" class="form-control" formControlName="endDate" />
+              </div>
+
+              <div class="col-12" *ngIf="scheduleForm.errors?.['rangeInvalid'] && scheduleForm.touched">
+                <div class="alert alert-danger py-2 px-3 mb-0">
+                  La date de fin doit être postérieure ou égale à la date de début.
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid d-sm-flex justify-content-end gap-2 mt-4">
+              <a routerLink="/schedules" class="btn btn-outline-secondary">Annuler</a>
+              <button type="submit" class="btn btn-primary"
+                      [disabled]="scheduleForm.invalid || loading">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                Créer le planning
+              </button>
+            </div>
+          </form>
         </div>
       </div>
+    </div>
 
-      <!-- Si MENSLUEL -->
-      <div class="form-row" *ngIf="scheduleForm.value.mode === 'MONTH'">
-        <div class="form-group">
-          <label class="form-label">Mois</label>
-          <select class="form-control" formControlName="month">
-            <option value="">Sélectionnez un mois</option>
-            <option *ngFor="let m of getMonths()" [value]="m.value">{{ m.label }}</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Année</label>
-          <select class="form-control" formControlName="year">
-            <option value="">Sélectionnez une année</option>
-            <option *ngFor="let y of getYears()" [value]="y">{{ y }}</option>
-          </select>
+    <!-- Colonne CONSEILS -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm h-100 sticky-lg-top" style="top: 84px;">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Conseils</h2>
+          <ul class="small text-muted ps-3 mb-0">
+            <li>Choisissez <strong>Mensuel</strong> pour un mois civil complet.</li>
+            <li><strong>Période</strong> pour un besoin ponctuel (chantier, évènement…).</li>
+            <li>Le site applique automatiquement ses règles hébdos et exceptions.</li>
+          </ul>
         </div>
       </div>
-
-      <!-- Si PÉRIODE -->
-      <div class="form-row" *ngIf="scheduleForm.value.mode === 'RANGE'">
-        <div class="form-group">
-          <label class="form-label">Début</label>
-          <input type="date" class="form-control" formControlName="startDate" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Fin</label>
-          <input type="date" class="form-control" formControlName="endDate" />
-        </div>
-      </div>
-
-      <!-- erreur de plage invalide -->
-      <div *ngIf="scheduleForm.errors?.['rangeInvalid'] && scheduleForm.touched" class="alert alert-error">
-        La date de fin doit être postérieure ou égale à la date de début.
-      </div>
-
-      <div class="form-actions">
-        <button type="button" class="btn btn-outline" routerLink="/schedules">Annuler</button>
-        <button type="submit" class="btn btn-primary" [disabled]="scheduleForm.invalid || loading">
-          <span *ngIf="loading" class="spinner-sm"></span>
-          <span *ngIf="!loading">Créer le Planning</span>
-        </button>
-      </div>
-    </form>
+    </div>
   </div>
 </div>

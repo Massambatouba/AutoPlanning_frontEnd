@@ -115,3 +115,21 @@
     transform: rotate(360deg);
   }
 }
+/* largeur élégante sur grands écrans */
+.container-xxl.page-edit-site { max-width: 1320px; }
+
+/* cartes douces */
+.page-edit-site .card { border-radius: .75rem; }
+.page-edit-site .card-body { padding: 1.25rem 1.5rem; }
+
+/* champs confortables pour le tactile */
+.page-edit-site .form-control,
+.page-edit-site .form-select { min-height: 44px; }
+
+/* titres de section */
+.page-edit-site h2.h6 { color: #6c757d; }
+
+/* si tu as un header fixe, ajuste l’offset du sticky ici */
+@media (min-width: 992px) {
+  .page-edit-site .sticky-lg-top { top: 84px; }
+}

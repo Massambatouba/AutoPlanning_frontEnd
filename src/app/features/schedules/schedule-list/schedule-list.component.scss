@@ -246,3 +246,20 @@
         flex: 1;
       }
     }
+    .container-xxl.schedule-list-page { max-width: 1320px; }
+
+/* petit lift au survol */
+.schedule-card { transition: transform .15s ease, box-shadow .15s ease; }
+.schedule-card:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08); }
+
+/* header compact et lisible */
+.card-header { border-bottom: 1px solid rgba(0,0,0,.06); }
+.card-footer { border-top: 1px solid rgba(0,0,0,.06); }
+
+/* accessibilité : clique confortable */
+.btn { min-height: 38px; }
+
+/* responsive : réduis les marges sur mobile */
+@media (max-width: 576px) {
+  .schedule-list-page h1 { font-size: 1.125rem; }
+}

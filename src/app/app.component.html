@@ -1,13 +1,18 @@
-<div class="app-container" [class.is-authenticated]="isAuthenticated">
+<div class="app-shell" [class.app-shell--collapsed]="!side.isOpen" [class.is-authenticated]="isAuthenticated">
   <app-header *ngIf="isAuthenticated && !isPrintMode" 
               [companyName]="companyName"
               (toggleSidenav)="toggleSidenav()">
   </app-header>
   
   <div class="main-container">
-    <app-sidenav *ngIf="isAuthenticated && !isPrintMode" 
-                 [isOpen]="isSidenavOpen">
-    </app-sidenav>
+<app-sidenav #side [isOpen]="true"></app-sidenav>
+
+<div
+  class="app-with-sidenav"
+  [class.app-with-sidenav--collapsed]="!side.isOpen"
+>
+</div>
+
     
     <main class="content" [class.with-sidenav]="isAuthenticated && isSidenavOpen && !isPrintMode">
       <router-outlet></router-outlet>
